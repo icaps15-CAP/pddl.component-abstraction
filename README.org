@@ -1,0 +1,37 @@
+* Pddl.Component-Abstraction 
+
+** Usage
+
+** Dependencies
+
+This library is at least tested on implementation listed below:
+
++ SBCL 1.1.9.5-953e296 on X86 Linux  3.2.0-53-generic (author's environment)
+
+Also, it depends on the following libraries:
+
++ PDDL by guicho ::
+    PDDL parser
+
++ OPTIMA by Tomohiro Matsuyama ::
+    Optimized Pattern Matching Library
+
++ ALEXANDRIA by  ::
+    Alexandria is a collection of portable public domain utilities.
+
++ ITERATE by  ::
+    Jonathan Amsterdam's iterator/gatherer/accumulator facility
+
+
+
+** Installation
+
+
+** Author
+
++ Masataro Asai
+
+* Copyright
+
+Copyright (c) 2013 Masataro Asai
+
