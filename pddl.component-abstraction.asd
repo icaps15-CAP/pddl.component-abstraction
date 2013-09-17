@@ -17,8 +17,10 @@
   :author "Masataro Asai"
   :license ""
   :depends-on (:pddl
+               :pddl.plan-optimizer
                :optima
                :alexandria
+               :guicho-utilities
                :iterate)
   :components ((:module "src"
                 :components
@@ -26,7 +28,7 @@
   :description ""
   :long-description
   #.(with-open-file (stream (merge-pathnames
-                             #p"README.markdown"
+                             #p"README.org"
                              (or *load-pathname* *compile-file-pathname*))
                             :if-does-not-exist nil
                             :direction :input)

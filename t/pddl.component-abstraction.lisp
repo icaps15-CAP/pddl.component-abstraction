@@ -6,8 +6,13 @@
 (in-package :cl-user)
 (defpackage pddl.component-abstraction-test
   (:use :cl
+        :pddl
         :pddl.component-abstraction
-        :fiveam))
+        :pddl.instances
+        :alexandria
+        :iterate
+        :fiveam)
+  (:shadow :minimize :maximize))
 (in-package :pddl.component-abstraction-test)
 
 (def-suite :pddl.component-abstraction)

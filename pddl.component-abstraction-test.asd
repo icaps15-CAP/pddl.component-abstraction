@@ -12,7 +12,8 @@
   :author "Masataro Asai"
   :license ""
   :depends-on (:pddl.component-abstraction
-               :cl-test-more)
+               :pddl.instances
+               :fiveam)
   :components ((:module "t"
                 :components
                 ((:file "pddl.component-abstraction"))))
