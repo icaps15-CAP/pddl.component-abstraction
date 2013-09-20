@@ -54,6 +54,10 @@
     (is-false (predicates-connect-components
                (list rc0 rc1) ac))
 
+    ;; regression test
+    (is-false (predicates-connect-components
+               nil ac))
+
     (is-false (predicates-connect-components
                (list sr0 sr1) ac))
     

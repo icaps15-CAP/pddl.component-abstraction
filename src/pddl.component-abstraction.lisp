@@ -160,10 +160,11 @@
 
 @export
 (defun predicates-connect-components (facts ac)
-  (format *standard-output*
-          "~2&testing components of type ~w,~& with static facts of type ~w"
-          (mapcar #'type (parameters (first ac)))
-          (mapcar #'type (parameters (first facts))))
+  (when facts
+    (format *standard-output*
+            "~2&testing components of type ~w,~& with static facts of type ~w"
+            (mapcar #'type (parameters (first ac)))
+            (mapcar #'type (parameters (first facts)))))
   (mapl
    (lambda (list)
      (destructuring-bind (a . rest) list
