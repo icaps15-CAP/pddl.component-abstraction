@@ -125,9 +125,7 @@
           (for remaining =
                (set-difference
                 all-types
-                (remove-duplicates
-                 (mapcar #'type (reduce #'union (mapcar #'parameters ac)
-                                        :initial-value nil)))))
+                closed))
           (while remaining)
           (for type = (first remaining))
           (until (eq type ptype))
