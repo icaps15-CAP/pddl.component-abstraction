@@ -21,35 +21,34 @@
 
 (test :predicate-connects-components
   (let* ((*domain* rover)
-         (*problem* roverprob3726)
-         (c0 (object *problem* :camera0))
-         (r0 (object *problem* :rover0))
-         (c1 (object *problem* :camera1))
-         (r1 (object *problem* :rover1))
-         (s0 (object *problem* :rover0store))
-         (s1 (object *problem* :rover1store))
+         (*problem* roverprob7126)
          (waypoint (object *problem* :waypoint0))
 
-         (rc0 (pddl-atomic-state
-               :name 'rc
-               :parameters (list c0 r0)))
-         (rc1 (pddl-atomic-state
-               :name 'rc
-               :parameters (list c1 r1)))
-         (sr0 (pddl-atomic-state
-               :name 'sr
-               :parameters (list s0 r0)))
-         (sr1 (pddl-atomic-state
-               :name 'sr
-               :parameters (list s1 r1)))
-         (rw0 (pddl-atomic-state
-               :name 'rw
-               :parameters (list r0 waypoint)))
-         (rw1 (pddl-atomic-state
-               :name 'rw
-               :parameters (list r1 waypoint)))
+         (c0 (object *problem* :camera0))
+         (r0 (object *problem* :rover0))
+         (s0 (object *problem* :rover0store))
+         (rc0 (pddl-atomic-state :name 'rc :parameters (list c0 r0)))
+         (sr0 (pddl-atomic-state :name 'sr :parameters (list s0 r0)))
+         (rw0 (pddl-atomic-state :name 'rw :parameters (list r0 waypoint)))
          (ac0 (make-abstract-component :components (list r0)))
+         
+         (c1 (object *problem* :camera1))
+         (r1 (object *problem* :rover1))
+         (s1 (object *problem* :rover1store))
+         (rc1 (pddl-atomic-state :name 'rc :parameters (list c1 r1)))
+         (sr1 (pddl-atomic-state :name 'sr :parameters (list s1 r1)))
+         (rw1 (pddl-atomic-state :name 'rw :parameters (list r1 waypoint)))
          (ac1 (make-abstract-component :components (list r1)))
+         
+         (c2 (object *problem* :camera2))
+         (r2 (object *problem* :rover2))
+         (s2 (object *problem* :rover2store))
+         (rc2 (pddl-atomic-state :name 'rc :parameters (list c2 r2)))
+         (sr2 (pddl-atomic-state :name 'sr :parameters (list s2 r2)))
+         (rw2 (pddl-atomic-state :name 'rw :parameters (list r2 waypoint)))
+         (ac2 (make-abstract-component :facts (list sr2) :components (list r2 s2)))
+         (ac3 (make-abstract-component :facts (list rc2) :components (list r2 c2)))
+         
          (ac (list ac0 ac1)))
 
     (is-false (predicates-connect-components
@@ -80,7 +79,29 @@
     (is-true (predicates-connect-components
               (list rw0 rw1) ac))
 
-    (is-true (abstract-type= ac0 ac1))))
+    (is-true (abstract-type= ac0 ac1))
+    (is-true (abstract-type<= ac0 ac1))
+    (is-true (abstract-type<= ac1 ac0))
+    (is-true (abstract-type<=> ac1 ac0))
+    (is-false (abstract-type< ac1 ac0))
+    (is-false (abstract-type< ac0 ac1))
+
+    ;; after the addition, ac0 > ac2
+    (is-false (abstract-type= ac0 ac2))
+    (is-true (abstract-type<= ac2 ac0))
+    (is-false (abstract-type<= ac0 ac2))
+    (is-true (abstract-type<=> ac2 ac0))
+    (is-false (abstract-type< ac0 ac2))
+    (is-true (abstract-type< ac2 ac0))
+
+
+    (is-false (abstract-type= ac3 ac2))
+    (is-false (abstract-type<= ac3 ac2))
+    (is-false (abstract-type<= ac2 ac3))
+    (is-false (abstract-type<=> ac2 ac3))
+    (is-false (abstract-type< ac2 ac3))
+    (is-false (abstract-type< ac3 ac2))
+    ))
 
 (test :cluster-objects
   (finishes

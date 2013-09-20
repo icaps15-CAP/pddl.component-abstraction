@@ -1,14 +1,15 @@
 (in-package :pddl.component-abstraction)
 (cl-syntax:use-syntax :annot)
 
-(defun mappings (n)
+(defun mappings (from to)
+  (assert (<= from to))
   (let (acc)
     (map-permutations
      (lambda (der)
        (push (lambda (cs1 cs2 c)
                (nth (nth (position c cs1) der) cs2))
              acc))
-     (iota n))
+     (iota to) :length from)
     acc))
 
 @export
@@ -17,7 +18,7 @@
        (abstract-type<= ac2 ac1)))
 
 @export
-(defun abstract-type-<=> (ac1 ac2)
+(defun abstract-type<=> (ac1 ac2)
   "Returns true when ac1 <= ac2 or ac1 => ac2 in a sense of abstract-type-<="
   (or (abstract-type<= ac1 ac2)
       (abstract-type<= ac2 ac1)))
@@ -47,7 +48,7 @@
                                                     (equalp mapped (parameters f2))))
                                              fs2)))
                                    fs1))))
-                   (mappings (length cs1)))))))))
+                   (mappings (length cs1) (length cs2)))))))))
 
 @export
 (defun abstract-type< (ac1 ac2)
@@ -74,5 +75,5 @@
                                                     (equalp mapped (parameters f2))))
                                              fs2)))
                                    fs1))))
-                   (mappings (length cs1)))))))))
+                   (mappings (length cs1) (length cs2)))))))))
 
