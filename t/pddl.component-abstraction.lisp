@@ -18,7 +18,7 @@
 (def-suite :pddl.component-abstraction)
 (in-suite :pddl.component-abstraction)
 
-(test predicate-connects-components
+(test :predicate-connects-components
   (let* ((*domain* rover)
          (*problem* roverprob3726)
          (c0 (object *problem* :camera0))
@@ -30,17 +30,23 @@
          (waypoint (object *problem* :waypoint0))
 
          (rc0 (pddl-atomic-state
-              :parameters (list c0 r0)))
+               :name 'rc
+               :parameters (list c0 r0)))
          (rc1 (pddl-atomic-state
-              :parameters (list c1 r1)))
+               :name 'rc
+               :parameters (list c1 r1)))
          (sr0 (pddl-atomic-state
-              :parameters (list s0 r0)))
+               :name 'sr
+               :parameters (list s0 r0)))
          (sr1 (pddl-atomic-state
-              :parameters (list s1 r1)))
+               :name 'sr
+               :parameters (list s1 r1)))
          (rw0 (pddl-atomic-state
-              :parameters (list r0 waypoint)))
+               :name 'rw
+               :parameters (list r0 waypoint)))
          (rw1 (pddl-atomic-state
-              :parameters (list r1 waypoint)))
+               :name 'rw
+               :parameters (list r1 waypoint)))
          (ac0 (make-abstract-component :components (list r0)))
          (ac1 (make-abstract-component :components (list r1)))
          (ac (list ac0 ac1)))
@@ -55,17 +61,27 @@
                (list rw0 rw1) ac))
 
     (push c0 (parameters ac0))
+    (push rc0 (abstract-component-facts ac0))
     (push c1 (parameters ac1))
+    (push rc1 (abstract-component-facts ac1))
     
     (is-false (predicates-connect-components
                (list sr0 sr1) ac))
     
     (is-true (predicates-connect-components
-               (list rw0 rw1) ac))))
-               
+               (list rw0 rw1) ac))
 
+    (push s0 (parameters ac0))
+    (push sr0 (abstract-component-facts ac0))
+    (push s1 (parameters ac1))
+    (push sr1 (abstract-component-facts ac1))
+    
+    (is-true (predicates-connect-components
+              (list rw0 rw1) ac))
 
-(test cluster-objects
+    (is-true (abstract-type= ac0 ac1))))
+
+(test :cluster-objects
   (finishes
     (cluster-objects (static-facts roverprob3726)
                      (static-predicates roverprob3726))))
