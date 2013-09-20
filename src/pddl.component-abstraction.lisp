@@ -119,34 +119,47 @@
         (for open = nil)
         (for closed = nil)
         (for tried = nil)
-        (for type in (%all-types constants))
-        (push type open)
-        (iter (for o in (remove-if-not (rcurry #'pddl-typep type) constants))
-              (push (make-abstract-component
-                     :components (list o)
-                     :seed o) ac))
-        (iter (while open)
-              (for t1 = (pop open))
-              (push t1 closed)
-              (iter (for p in (set-difference
-                               (remove-if-not
-                                (lambda (pred)
-                                  (some (rcurry #'pddl-typep t1)
-                                        (parameters pred)))
-                                static-predicates)
-                               tried))
-                    (push p tried)
-                    (for p-facts =
-                         (remove-if-not
-                          (curry (conjoin #'eqname #'predicate-more-specific-p) p)
-                          static-facts))
-                    (unless (predicates-connect-components p-facts ac)
-                      (setf ac (extend-components p-facts ac))
-                      (iter (for t2 in (remove-duplicates
-                                        (mapcar #'type (parameters p))))
-                            (unless (or (find t2 open)
-                                        (find t2 closed))
-                              (push t2 open))))))
+        (for all-types on (%all-types constants))
+        (iter
+          (with ptype = nil)
+          (for remaining =
+               (set-difference
+                all-types
+                (remove-duplicates
+                 (mapcar #'type (reduce #'union (mapcar #'parameters ac)
+                                        :initial-value nil)))))
+          (while remaining)
+          (for type = (first remaining))
+          (until (eq type ptype))
+          (setf ptype type)
+          ;; (break+ type ptype remaining)
+          (push type open)
+          (iter (for o in (remove-if-not (rcurry #'pddl-typep type) constants))
+                (push (make-abstract-component
+                       :components (list o)
+                       :seed o) ac))
+          (iter (while open)
+                (for t1 = (pop open))
+                (push t1 closed)
+                (iter (for p in (set-difference
+                                 (remove-if-not
+                                  (lambda (pred)
+                                    (some (rcurry #'pddl-typep t1)
+                                          (parameters pred)))
+                                  static-predicates)
+                                 tried))
+                      (push p tried)
+                      (for p-facts =
+                           (remove-if-not
+                            (curry (conjoin #'eqname #'predicate-more-specific-p) p)
+                            static-facts))
+                      (unless (predicates-connect-components p-facts ac)
+                        (setf ac (extend-components p-facts ac))
+                        (iter (for t2 in (remove-duplicates
+                                          (mapcar #'type (parameters p))))
+                              (unless (or (find t2 open)
+                                          (find t2 closed))
+                                (push t2 open)))))))
         (collect ac)))
 
 ;; (finding
