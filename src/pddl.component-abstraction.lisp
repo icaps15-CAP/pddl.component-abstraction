@@ -115,10 +115,10 @@
   ;; 全部の順番からやってみて、ダメだったら最初からやり直しというアルゴリズム
   ;; greedy hill-climbingか
   (iter (with constants = (%constants static-facts))
-        (for ac = nil)
-        (for open = nil)
-        (for closed = nil)
-        (for tried = nil)
+        (for ac = nil)                  ; (list abstract-component)
+        (for open = nil)                ; (list type)
+        (for closed = nil)              ; (list type)
+        (for tried-preds = nil)         ; (list predicate)
         (for all-types on (%all-types constants))
         (iter
           (with ptype = nil)
@@ -147,8 +147,8 @@
                                     (some (rcurry #'pddl-typep t1)
                                           (parameters pred)))
                                   static-predicates)
-                                 tried))
-                      (push p tried)
+                                 tried-preds))
+                      (push p tried-preds)
                       (for p-facts =
                            (remove-if-not
                             (curry (conjoin #'eqname #'predicate-more-specific-p) p)
