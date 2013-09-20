@@ -9,6 +9,7 @@
         :pddl
         :pddl.component-abstraction
         :pddl.instances
+        :guicho-utilities
         :alexandria
         :iterate
         :fiveam)

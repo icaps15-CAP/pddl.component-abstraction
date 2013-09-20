@@ -25,7 +25,8 @@
   :components ((:module "src"
                 :components
                 ((:file "package")
-                 (:file "pddl.component-abstraction"))))
+                 (:file "pddl.component-abstraction")
+                 (:file "abstract-type"))))
   :description ""
   :long-description
   #.(with-open-file (stream (merge-pathnames

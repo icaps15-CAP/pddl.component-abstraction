@@ -13,6 +13,7 @@
   :license ""
   :depends-on (:pddl.component-abstraction
                :pddl.instances
+               :guicho-utilities
                :fiveam)
   :components ((:module "t"
                 :components
