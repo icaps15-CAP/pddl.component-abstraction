@@ -1,14 +1,4 @@
-#|
-  This file is a part of pddl.component-abstraction project.
-  Copyright (c) 2013 Masataro Asai
-|#
 
-(in-package :cl-user)
-(defpackage pddl.component-abstraction
-  (:use :cl :pddl :optima :alexandria :iterate
-        :pddl.plan-optimizer
-        :guicho-utilities)
-  (:shadow :minimize :maximize))
 (in-package :pddl.component-abstraction)
 
 (cl-syntax:use-syntax :annot)
@@ -91,16 +81,24 @@
                       )
              (all-instantiated-predicates problem)))
 
+@export 'make-abstract-component
+
+@export
 (defstruct abstract-component
+  seed
   (facts nil)
   (components nil))
 
 (defmethod parameters ((ac abstract-component))
   (abstract-component-components ac))
+(defmethod (setf parameters) (new (ac abstract-component))
+  (setf (abstract-component-components ac) new))
 
 (defmethod print-object ((ac abstract-component) s)
   (print-unreadable-object (ac s)
-    (format s "(ABS ~w)" (parameters ac))))
+    (format s "ABS ~w :seed ~w"
+            (parameters ac)
+            (abstract-component-seed ac))))
 
 (defun %constants (static-facts)
   (remove-duplicates
@@ -124,10 +122,10 @@
         (for type in (%all-types constants))
         (push type open)
         (iter (for o in (remove-if-not (rcurry #'pddl-typep type) constants))
-              (push (make-abstract-component :components (list o)) ac))
-        ;(break+ ac)
+              (push (make-abstract-component
+                     :components (list o)
+                     :seed o) ac))
         (iter (while open)
-              ;(break+ open closed tried)
               (for t1 = (pop open))
               (push t1 closed)
               (iter (for p in (set-difference
@@ -138,49 +136,73 @@
                                 static-predicates)
                                tried))
                     (push p tried)
-                    (for p-facts = (remove-if-not
-                                    (curry (conjoin
-                                            #'eqname
-                                            #'predicate-more-specific-p) p)
-                                    static-facts))
-                    (unless (predicate-connects-components p-facts ac)
+                    (for p-facts =
+                         (remove-if-not
+                          (curry (conjoin #'eqname #'predicate-more-specific-p) p)
+                          static-facts))
+                    (unless (predicates-connect-components p-facts ac)
                       (setf ac (extend-components p-facts ac))
                       (iter (for t2 in (remove-duplicates
                                         (mapcar #'type (parameters p))))
                             (unless (or (find t2 open)
                                         (find t2 closed))
                               (push t2 open))))))
-        (collect ac)
-        ;; (finding
-        ;;  ac maximizing
-        ;;  (reduce #'max ac :key (lambda (c)
-        ;;                          (length
-        ;;                           (remove-duplicates
-        ;;                            (mapcar #'type (parameters c)))))))
-        ;; (when (decomposition-satisfactory-p 4 ac)
-        ;;   (return-from cluster-objects ac))
-        ))
+        (collect ac)))
+
+;; (finding
+;;  ac maximizing
+;;  (reduce #'max ac :key (lambda (c)
+;;                          (length
+;;                           (remove-duplicates
+;;                            (mapcar #'type (parameters c)))))))
+;; (when (decomposition-satisfactory-p 4 ac)
+;;   (return-from cluster-objects ac))
 
 (defun static-fact-extends-ac-p (f ac)
   (intersection (parameters f) (parameters ac)))
 
-(defun predicate-connects-components (facts ac)
-  (some
-   (lambda (f)
-     (< 1 (length (remove-if-not (curry #'static-fact-extends-ac-p f) ac))))
-   facts))
+@export
+(defun predicates-connect-components (facts ac)
+  (format *standard-output*
+          "~2&testing components of type ~w,~& with static facts of type ~w"
+          (mapcar #'type (parameters (first ac)))
+          (mapcar #'type (parameters (first facts))))
+  (mapl
+   (lambda (list)
+     (destructuring-bind (a . rest) list
+       (when (some (curry #'intersection a) rest)
+         (return-from predicates-connect-components t))))
+   (mapcar
+     (lambda (ps)
+       (reduce
+        (lambda (ps f)
+          (let ((fps (parameters f)))
+            (if (intersection fps ps)
+                (unionf fps ps)
+                ps)))
+        facts :initial-value ps))
+     (mapcar #'parameters ac)))
+  nil)
 
 (defun extend-components (facts ac)
-  (dolist (f facts)
-    (match (find (curry #'static-fact-extends-ac-p f) ac)
-      ((abstract-component (place facts) (place components))
-       (push f facts)
-       (unionf components (parameters f)))
-      (nil
-       (push (make-abstract-component
-              :facts (list f)
-              :components (parameters f))
-             ac))))
+  (terpri)
+  (pprint-logical-block (*standard-output* facts :prefix "extending by:")
+    (pprint-newline :mandatory)
+    (dolist (f facts)
+      (write f)
+      (pprint-newline :mandatory)
+      (match (find-if (curry #'static-fact-extends-ac-p f) ac)
+        ((abstract-component (facts (place facts)) (components (place components)))
+         (push f facts)
+         (unionf components (parameters f)))
+        (nil
+         (format t "~%~4tneither c1 nor c2 are part of a previously built component,
+~4ta new component containing f , c1 and c2.
+~4t ~w" f)
+         (push (make-abstract-component
+                :facts (list f)
+                :components (parameters f))
+               ac)))))
   ac)
 
 (defun decomposition-satisfactory-p (high ac)
