@@ -96,9 +96,9 @@
 
 (defmethod print-object ((ac abstract-component) s)
   (print-unreadable-object (ac s)
-    (format s "ABS ~w :seed ~w"
-            (parameters ac)
-            (abstract-component-seed ac))))
+    (format s "~<A-COMP ~;:objs ~w~_:seed ~w~;~:>"
+            (list (parameters ac)
+                  (abstract-component-seed ac)))))
 
 (defun %constants (static-facts)
   (remove-duplicates
