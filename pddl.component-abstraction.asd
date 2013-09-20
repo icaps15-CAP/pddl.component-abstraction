@@ -22,11 +22,13 @@
                :alexandria
                :guicho-utilities
                :iterate)
-  :components ((:module "src"
+  :components ((:file "src/package")
+               (:module "src"
                 :components
-                ((:file "package")
-                 (:file "pddl.component-abstraction")
-                 (:file "abstract-type"))))
+                ((:file "pddl.component-abstraction")
+                 (:file "abstract-type")
+                 (:file "integrated"))
+                :depends-on ("src/package")))
   :description ""
   :long-description
   #.(with-open-file (stream (merge-pathnames
