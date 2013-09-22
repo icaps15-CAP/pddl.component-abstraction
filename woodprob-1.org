@@ -15,7 +15,7 @@ satの問題は要素数が増えただけなので手作業には適さない�
 
 以下で説明する例は opt の p01
 
-** part init & goal
+** DONE part init & goal
 
 | part | color | goalsize | available | unused | wood     | surface-condition | treatment       |
 |------+-------+----------+-----------+--------+----------+-------------------+-----------------|
@@ -35,45 +35,45 @@ satの問題は要素数が増えただけなので手作業には適さない�
 | p4   |       |          | t         |        | teak     |                   | glazed          |
 
 
-** abstract task
+** DONE abstract task
 
-| a-task | part | color   | goalsize | available | unused | wood  | surface-condition | treatment  |
-|--------+------+---------+----------+-----------+--------+-------+-------------------+------------|
-| task0  | ?p   |         | ?size    |           | t      |       |                   |            |
-|        | ?p   |         |          | t         |        |       | ?condition        | ?treatment |
-|--------+------+---------+----------+-----------+--------+-------+-------------------+------------|
-| task1  | ?p   |         | ?size    |           | t      |       |                   |            |
-|        | ?p   |         |          | t         |        | ?wood | ?condition        | ?treatment |
-|--------+------+---------+----------+-----------+--------+-------+-------------------+------------|
-| task2  | ?p   | ?color1 |          | t         |        |       | ?condition1       |            |
-|        | ?p   | ?color2 | ?size    | t         |        | ?wood | ?condition2       | ?treatment |
-|--------+------+---------+----------+-----------+--------+-------+-------------------+------------|
-| task3  | ?p   |         | ?size    |           | t      |       |                   |            |
-|        | ?p   |         |          | t         |        | ?wood | ?condition        |            |
-|--------+------+---------+----------+-----------+--------+-------+-------------------+------------|
-| task4  | ?p   |         | ?size    |           | t      |       |                   |            |
-|        | ?p   |         |          | t         |        | ?wood |                   | ?treatment |
+| a-task  | part | color   | goalsize | available | unused | wood  | surface-condition | treatment  |
+|---------+------+---------+----------+-----------+--------+-------+-------------------+------------|
+| t0-init | ?p   |         | ?size    |           | t      |       |                   |            |
+| t0-goal | ?p   |         |          | t         |        |       | ?condition        | ?treatment |
+|---------+------+---------+----------+-----------+--------+-------+-------------------+------------|
+| t1-init | ?p   |         | ?size    |           | t      |       |                   |            |
+| t1-goal | ?p   |         |          | t         |        | ?wood | ?condition        | ?treatment |
+|---------+------+---------+----------+-----------+--------+-------+-------------------+------------|
+| t2-init | ?p   | ?color1 |          | t         |        |       | ?condition1       |            |
+| t2-goal | ?p   | ?color2 | ?size    | t         |        | ?wood | ?condition2       | ?treatment |
+|---------+------+---------+----------+-----------+--------+-------+-------------------+------------|
+| t3-init | ?p   |         | ?size    |           | t      |       |                   |            |
+| t3-goal | ?p   |         |          | t         |        | ?wood | ?condition        |            |
+|---------+------+---------+----------+-----------+--------+-------+-------------------+------------|
+| t4-init | ?p   |         | ?size    |           | t      |       |                   |            |
+| t4-goal | ?p   |         |          | t         |        | ?wood |                   | ?treatment |
 
-** abstract task+
+** DONE abstract task+
 
 allows *unspecified* in its arguments.
-such arguments are marked with =+=
+such arguments are marked with =*=
+実装済み
 
-| a-task | part | color   | goalsize | available | unused | wood   | surface-condition | treatment   |
-|--------+------+---------+----------+-----------+--------+--------+-------------------+-------------|
-| task0  | ?p   |         | ?size    |           | t      |        |                   |             |
-|        | ?p   |         |          | t         |        | ?wood+ | ?condition+       | ?treatment+ |
-|--------+------+---------+----------+-----------+--------+--------+-------------------+-------------|
-| task1  | ?p   | ?color1 |          | t         |        |        | ?condition1       |             |
-|        | ?p   | ?color2 | ?size    | t         |        | ?wood  | ?condition2       | ?treatment  |
-|--------+------+---------+----------+-----------+--------+--------+-------------------+-------------|
+| a-task  | part | color   | goalsize | available | unused | wood   | surface-condition | treatment   |
+|---------+------+---------+----------+-----------+--------+--------+-------------------+-------------|
+| t0-init | ?p   |         | ?size    |           | t      |        |                   |             |
+| t0-goal | ?p   |         |          | t         |        | ?wood* | ?condition*       | ?treatment* |
+|---------+------+---------+----------+-----------+--------+--------+-------------------+-------------|
+| t1-init | ?p   | ?color1 |          | t         |        |        | ?condition1       |             |
+| t1-goal | ?p   | ?color2 | ?size    | t         |        | ?wood  | ?condition2       | ?treatment  |
+|---------+------+---------+----------+-----------+--------+--------+-------------------+-------------|
 
 ** board init
 
 | board | boardsize | wood     | surface-condition | available |
 | b0    | s3        | teak     | rough             | t         |
 | b1    | s5        | mahogany | rough             | t         |
-
 
 * the result of component abstraction
 
@@ -198,7 +198,7 @@ such arguments are marked with =+=
 
 ** cell-assembly-eachparts の場合
 
-最初のseed typeをbaseにすれば、やはりうまくタスクの材料が抽出できた。
+最初のseed typeをbaseにすれば、想定通り、やはりうまくタスクの材料が抽出できた。
 
 #+BEGIN_SRC lisp
 
@@ -248,18 +248,25 @@ such arguments are marked with =+=
 
 ** cell-assembly の場合
 
-seed type を base にすると、baseはacとして検出されない・・・なぜ?
-
-#+BEGIN_SRC lisp
-
-
-
-#+END_SRC
-
-
-#+BEGIN_SRC lisp
-
-#+END_SRC
+seed type を base にすると、baseはグラフ上の孤立点として考えられるため、
+ac として検出されない。(場所・アーム・機械との関係は移り変わるし、部品
+とも紐付けられていない。そのためstatic graph上に現れない、あるいは孤立
+点になる。)
 
 * attributes
 
++ attributes を検出するには、init だけでなく goal も考える必要がある。
+  + その init は別にstaticである必要はない
++ 変数が変わっても本当に適用できるものか???
++ unspecified 変数があっても本当に適用できるか?
+
+** 本当に適用できるか?
+
+unspecified 変数を考えないとする。
+例えそうであっても、woodworking の sat-p03 では
+
+| p0   |       | medium   |           | t      |          |                   |                 |
+| p0   |       |          | t         |        |          | smooth            | varnished       |
+|------+-------+----------+-----------+--------+----------+-------------------+-----------------|
+| p1   |       | small    |           | t      |          |                   |                 |
+| p1   |       |          | t         |        | teak     | smooth            | varnished       |

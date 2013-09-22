@@ -27,7 +27,8 @@
                 :components
                 ((:file "pddl.component-abstraction")
                  (:file "abstract-type")
-                 (:file "integrated"))
+                 (:file "integrated")
+                 (:file :tasks))
                 :depends-on ("src/package")))
   :description ""
   :long-description
