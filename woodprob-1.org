@@ -1,0 +1,265 @@
+
+
+* task?
+
+abstract component (ac) の node は 他の ac と node を共有しない。
+
+ここで一部条件を緩め、
+同じabstract type (at) の ac 同士が共有しているような要素を attribute として認識する。
+ac + attrubute(s) を abstract task として抽象化する。
+
+* 手作業で認識 -- woodworking (ipc 2011) の場合
+
+satとoptはドメインが同じなので、手作業にはoptを使った。
+satの問題は要素数が増えただけなので手作業には適さない。
+
+以下で説明する例は opt の p01
+
+** part init & goal
+
+| part | color | goalsize | available | unused | wood     | surface-condition | treatment       |
+|------+-------+----------+-----------+--------+----------+-------------------+-----------------|
+| p0   |       | medium   |           | t      |          |                   |                 |
+| p0   |       |          | t         |        |          | smooth            | varnished       |
+|------+-------+----------+-----------+--------+----------+-------------------+-----------------|
+| p1   |       | small    |           | t      |          |                   |                 |
+| p1   |       |          | t         |        | teak     | smooth            | varnished       |
+|------+-------+----------+-----------+--------+----------+-------------------+-----------------|
+| p2   | green |          | t         |        |          | smooth            |                 |
+| p2   | black | small    | t         |        | mahogany | rough             | colourfragments |
+|------+-------+----------+-----------+--------+----------+-------------------+-----------------|
+| p3   |       | large    |           | t      |          |                   |                 |
+| p3   |       |          | t         |        | mahogany | smooth            |                 |
+|------+-------+----------+-----------+--------+----------+-------------------+-----------------|
+| p4   |       | medium   |           | t      |          |                   |                 |
+| p4   |       |          | t         |        | teak     |                   | glazed          |
+
+
+** abstract task
+
+| a-task | part | color   | goalsize | available | unused | wood  | surface-condition | treatment  |
+|--------+------+---------+----------+-----------+--------+-------+-------------------+------------|
+| task0  | ?p   |         | ?size    |           | t      |       |                   |            |
+|        | ?p   |         |          | t         |        |       | ?condition        | ?treatment |
+|--------+------+---------+----------+-----------+--------+-------+-------------------+------------|
+| task1  | ?p   |         | ?size    |           | t      |       |                   |            |
+|        | ?p   |         |          | t         |        | ?wood | ?condition        | ?treatment |
+|--------+------+---------+----------+-----------+--------+-------+-------------------+------------|
+| task2  | ?p   | ?color1 |          | t         |        |       | ?condition1       |            |
+|        | ?p   | ?color2 | ?size    | t         |        | ?wood | ?condition2       | ?treatment |
+|--------+------+---------+----------+-----------+--------+-------+-------------------+------------|
+| task3  | ?p   |         | ?size    |           | t      |       |                   |            |
+|        | ?p   |         |          | t         |        | ?wood | ?condition        |            |
+|--------+------+---------+----------+-----------+--------+-------+-------------------+------------|
+| task4  | ?p   |         | ?size    |           | t      |       |                   |            |
+|        | ?p   |         |          | t         |        | ?wood |                   | ?treatment |
+
+** abstract task+
+
+allows *unspecified* in its arguments.
+such arguments are marked with =+=
+
+| a-task | part | color   | goalsize | available | unused | wood   | surface-condition | treatment   |
+|--------+------+---------+----------+-----------+--------+--------+-------------------+-------------|
+| task0  | ?p   |         | ?size    |           | t      |        |                   |             |
+|        | ?p   |         |          | t         |        | ?wood+ | ?condition+       | ?treatment+ |
+|--------+------+---------+----------+-----------+--------+--------+-------------------+-------------|
+| task1  | ?p   | ?color1 |          | t         |        |        | ?condition1       |             |
+|        | ?p   | ?color2 | ?size    | t         |        | ?wood  | ?condition2       | ?treatment  |
+|--------+------+---------+----------+-----------+--------+--------+-------------------+-------------|
+
+** board init
+
+| board | boardsize | wood     | surface-condition | available |
+| b0    | s3        | teak     | rough             | t         |
+| b1    | s5        | mahogany | rough             | t         |
+
+
+* the result of component abstraction
+
+いろんなabstractionから意味のあるabstractionを自動で見つけ出す必要があ
+る。たぶん、最初の一つの seed type を、作業するメインの対象 (cell assembly の
+例では base) に指定すればいいと思う。
+
+** woodworking の場合
+
+#+BEGIN_SRC lisp
+ #((#<A-COMP :objs ((CONST SMALL ∈ APARTSIZE)):seed (CONST SMALL ∈ APARTSIZE)>
+    #<A-COMP :objs ((CONST LARGE ∈ APARTSIZE)):seed (CONST LARGE ∈ APARTSIZE)>
+    #<A-COMP :objs ((CONST MEDIUM ∈ APARTSIZE))
+             :seed (CONST MEDIUM ∈ APARTSIZE)>)
+   (#<A-COMP :objs ((CONST ROUGH ∈ SURFACE)):seed (CONST ROUGH ∈ SURFACE)>)
+   (#<A-COMP :objs ((O B0 ∈ BOARD) (O TEAK ∈ AWOOD)):seed NIL>
+    #<A-COMP :objs ((O B1 ∈ BOARD) (O MAHOGANY ∈ AWOOD)):seed NIL>)
+   (#<A-COMP :objs ((O P0 ∈ PART)):seed (O P0 ∈ PART)>
+    #<A-COMP :objs ((O P1 ∈ PART)):seed (O P1 ∈ PART)>
+    #<A-COMP :objs ((O P2 ∈ PART)):seed (O P2 ∈ PART)>
+    #<A-COMP :objs ((O P3 ∈ PART)):seed (O P3 ∈ PART)>
+    #<A-COMP :objs ((O P4 ∈ PART)):seed (O P4 ∈ PART)>))
+#+END_SRC
+
+#+BEGIN_SRC lisp
+(#((#<A-COMP :objs ((O P0 ∈ PART) (O P4 ∈ PART) (CONST MEDIUM ∈ APARTSIZE))
+             :seed NIL>
+    #<A-COMP :objs ((O P1 ∈ PART) (O P2 ∈ PART) (CONST SMALL ∈ APARTSIZE))
+             :seed NIL>
+    #<A-COMP :objs ((O P3 ∈ PART) (CONST LARGE ∈ APARTSIZE)):seed NIL>)
+   (#<A-COMP :objs ((O TEAK ∈ AWOOD) (O B0 ∈ BOARD) (CONST ROUGH ∈ SURFACE)
+                    (O B1 ∈ BOARD) (O MAHOGANY ∈ AWOOD))
+             :seed (CONST ROUGH ∈ SURFACE)>)
+   (#<A-COMP :objs ((O SPRAY-VARNISHER0 ∈ SPRAY-VARNISHER) (O GLAZER0 ∈ GLAZER)
+                    (O IMMERSION-VARNISHER0 ∈ IMMERSION-VARNISHER)
+                    (O GREEN ∈ ACOLOUR))
+             :seed (O GLAZER0 ∈ GLAZER)>))
+ #((#<A-COMP :objs ((O P0 ∈ PART) (O P4 ∈ PART) (CONST MEDIUM ∈ APARTSIZE))
+             :seed NIL>
+    #<A-COMP :objs ((O P1 ∈ PART) (O P2 ∈ PART) (CONST SMALL ∈ APARTSIZE))
+             :seed NIL>
+    #<A-COMP :objs ((O P3 ∈ PART) (CONST LARGE ∈ APARTSIZE)):seed NIL>)
+   (#<A-COMP :objs ((O TEAK ∈ AWOOD) (O B0 ∈ BOARD) (CONST ROUGH ∈ SURFACE)
+                    (O B1 ∈ BOARD) (O MAHOGANY ∈ AWOOD))
+             :seed (CONST ROUGH ∈ SURFACE)>)
+   (#<A-COMP :objs ((O SPRAY-VARNISHER0 ∈ SPRAY-VARNISHER)
+                    (O IMMERSION-VARNISHER0 ∈ IMMERSION-VARNISHER)
+                    (O GLAZER0 ∈ GLAZER) (O GREEN ∈ ACOLOUR))
+             :seed (O IMMERSION-VARNISHER0 ∈ IMMERSION-VARNISHER)>))
+ #((#<A-COMP :objs ((O P0 ∈ PART) (O P4 ∈ PART) (CONST MEDIUM ∈ APARTSIZE))
+             :seed NIL>
+    #<A-COMP :objs ((O P1 ∈ PART) (O P2 ∈ PART) (CONST SMALL ∈ APARTSIZE))
+             :seed NIL>
+    #<A-COMP :objs ((O P3 ∈ PART) (CONST LARGE ∈ APARTSIZE)):seed NIL>)
+   (#<A-COMP :objs ((O TEAK ∈ AWOOD) (O B0 ∈ BOARD) (CONST ROUGH ∈ SURFACE)
+                    (O B1 ∈ BOARD) (O MAHOGANY ∈ AWOOD))
+             :seed (CONST ROUGH ∈ SURFACE)>)
+   (#<A-COMP :objs ((O IMMERSION-VARNISHER0 ∈ IMMERSION-VARNISHER)
+                    (O SPRAY-VARNISHER0 ∈ SPRAY-VARNISHER) (O GLAZER0 ∈ GLAZER)
+                    (O GREEN ∈ ACOLOUR))
+             :seed (O SPRAY-VARNISHER0 ∈ SPRAY-VARNISHER)>))
+ #((#<A-COMP :objs ((O P0 ∈ PART) (O P4 ∈ PART) (CONST MEDIUM ∈ APARTSIZE))
+             :seed NIL>
+    #<A-COMP :objs ((O P1 ∈ PART) (O P2 ∈ PART) (CONST SMALL ∈ APARTSIZE))
+             :seed NIL>
+    #<A-COMP :objs ((O P3 ∈ PART) (CONST LARGE ∈ APARTSIZE)):seed NIL>)
+   (#<A-COMP :objs ((O TEAK ∈ AWOOD) (O B0 ∈ BOARD) (CONST ROUGH ∈ SURFACE)
+                    (O B1 ∈ BOARD) (O MAHOGANY ∈ AWOOD))
+             :seed (CONST ROUGH ∈ SURFACE)>)
+   (#<A-COMP :objs ((O IMMERSION-VARNISHER0 ∈ IMMERSION-VARNISHER)
+                    (O GLAZER0 ∈ GLAZER) (O SPRAY-VARNISHER0 ∈ SPRAY-VARNISHER)
+                    (O GREEN ∈ ACOLOUR))
+             :seed (O GREEN ∈ ACOLOUR)>))   
+ #((#<A-COMP :objs ((CONST SMALL ∈ APARTSIZE)):seed (CONST SMALL ∈ APARTSIZE)>
+    #<A-COMP :objs ((CONST LARGE ∈ APARTSIZE)):seed (CONST LARGE ∈ APARTSIZE)>
+    #<A-COMP :objs ((CONST MEDIUM ∈ APARTSIZE))
+             :seed (CONST MEDIUM ∈ APARTSIZE)>)
+   (#<A-COMP :objs ((CONST ROUGH ∈ SURFACE)):seed (CONST ROUGH ∈ SURFACE)>)
+   (#<A-COMP :objs ((O B0 ∈ BOARD) (O TEAK ∈ AWOOD)):seed NIL>
+    #<A-COMP :objs ((O B1 ∈ BOARD) (O MAHOGANY ∈ AWOOD)):seed NIL>)
+   (#<A-COMP :objs ((O P0 ∈ PART)):seed (O P0 ∈ PART)>
+    #<A-COMP :objs ((O P1 ∈ PART)):seed (O P1 ∈ PART)>
+    #<A-COMP :objs ((O P2 ∈ PART)):seed (O P2 ∈ PART)>
+    #<A-COMP :objs ((O P3 ∈ PART)):seed (O P3 ∈ PART)>
+    #<A-COMP :objs ((O P4 ∈ PART)):seed (O P4 ∈ PART)>))
+ #((#<A-COMP :objs ((CONST ROUGH ∈ SURFACE)):seed (CONST ROUGH ∈ SURFACE)>)
+   (#<A-COMP :objs ((O B0 ∈ BOARD) (O TEAK ∈ AWOOD)):seed NIL>
+    #<A-COMP :objs ((O B1 ∈ BOARD) (O MAHOGANY ∈ AWOOD)):seed NIL>)
+   (#<A-COMP :objs ((O P1 ∈ PART) (O P2 ∈ PART) (CONST SMALL ∈ APARTSIZE))
+             :seed (CONST SMALL ∈ APARTSIZE)>
+    #<A-COMP :objs ((O P3 ∈ PART) (CONST LARGE ∈ APARTSIZE))
+             :seed (CONST LARGE ∈ APARTSIZE)>
+    #<A-COMP :objs ((O P0 ∈ PART) (O P4 ∈ PART) (CONST MEDIUM ∈ APARTSIZE))
+             :seed (CONST MEDIUM ∈ APARTSIZE)>))
+ #((#<A-COMP :objs ((CONST ROUGH ∈ SURFACE)):seed (CONST ROUGH ∈ SURFACE)>)
+   (#<A-COMP :objs ((O P0 ∈ PART) (O P4 ∈ PART) (CONST MEDIUM ∈ APARTSIZE))
+             :seed NIL>
+    #<A-COMP :objs ((O P1 ∈ PART) (O P2 ∈ PART) (CONST SMALL ∈ APARTSIZE))
+             :seed NIL>
+    #<A-COMP :objs ((O P3 ∈ PART) (CONST LARGE ∈ APARTSIZE)):seed NIL>)
+   (#<A-COMP :objs ((O B0 ∈ BOARD) (O TEAK ∈ AWOOD)):seed (O TEAK ∈ AWOOD)>
+    #<A-COMP :objs ((O B1 ∈ BOARD) (O MAHOGANY ∈ AWOOD))
+             :seed (O MAHOGANY ∈ AWOOD)>))
+ #((#<A-COMP :objs ((CONST ROUGH ∈ SURFACE)):seed (CONST ROUGH ∈ SURFACE)>)
+   (#<A-COMP :objs ((O P0 ∈ PART) (O P4 ∈ PART) (CONST MEDIUM ∈ APARTSIZE))
+             :seed NIL>
+    #<A-COMP :objs ((O P1 ∈ PART) (O P2 ∈ PART) (CONST SMALL ∈ APARTSIZE))
+             :seed NIL>
+    #<A-COMP :objs ((O P3 ∈ PART) (CONST LARGE ∈ APARTSIZE)):seed NIL>)
+   (#<A-COMP :objs ((O TEAK ∈ AWOOD) (O B0 ∈ BOARD)):seed (O B0 ∈ BOARD)>
+    #<A-COMP :objs ((O MAHOGANY ∈ AWOOD) (O B1 ∈ BOARD)):seed (O B1 ∈ BOARD)>))
+ #((#<A-COMP :objs ((O P0 ∈ PART) (O P4 ∈ PART) (CONST MEDIUM ∈ APARTSIZE))
+             :seed NIL>
+    #<A-COMP :objs ((O P1 ∈ PART) (O P2 ∈ PART) (CONST SMALL ∈ APARTSIZE))
+             :seed NIL>
+    #<A-COMP :objs ((O P3 ∈ PART) (CONST LARGE ∈ APARTSIZE)):seed NIL>)
+   (#<A-COMP :objs ((O TEAK ∈ AWOOD) (O B0 ∈ BOARD) (CONST ROUGH ∈ SURFACE)
+                    (O B1 ∈ BOARD) (O MAHOGANY ∈ AWOOD))
+             :seed (CONST ROUGH ∈ SURFACE)>)))
+
+#+END_SRC
+
+** cell-assembly-eachparts の場合
+
+最初のseed typeをbaseにすれば、やはりうまくタスクの材料が抽出できた。
+
+#+BEGIN_SRC lisp
+
+(#<A-COMP :objs ((O PART-B-0 ∈ COMPONENT) (O PART-A-0 ∈ COMPONENT)
+                 (O PART-C-0 ∈ COMPONENT) (O B-0 ∈ BASE))
+          :seed (O B-0 ∈ BASE)>
+ #<A-COMP :objs ((O PART-B-1 ∈ COMPONENT) (O PART-A-1 ∈ COMPONENT)
+                 (O PART-C-1 ∈ COMPONENT) (O B-1 ∈ BASE))
+          :seed (O B-1 ∈ BASE)>)
+
+#+END_SRC
+
+
+#+BEGIN_SRC lisp
+
+#((#<A-COMP :objs ((O INSPECT-BASE ∈ MACHINE-JOB)
+                    (O INSPECTION-MACHINE ∈ MACHINE))
+             :seed NIL>
+    #<A-COMP :objs ((O SCREW-C ∈ MACHINE-JOB) (O SCREW-MACHINE-C ∈ MACHINE))
+             :seed NIL>
+    #<A-COMP :objs ((O OIL-CYLINDER ∈ MACHINE-JOB) (O OILING-MACHINE ∈ MACHINE))
+             :seed NIL>
+    #<A-COMP :objs ((O SCREW-A ∈ MACHINE-JOB) (O SCREW-MACHINE-A ∈ MACHINE))
+             :seed NIL>
+    #<A-COMP :objs ((O INSERT-GASKET ∈ MACHINE-JOB)
+                    (O GASKET-MACHINE ∈ MACHINE))
+             :seed NIL>)
+   (#<A-COMP :objs ((O ATTATCH-C ∈ JOB) (O ATTATCH-B ∈ JOB) (O TABLE2 ∈ TABLE))
+             :seed NIL>
+    #<A-COMP :objs ((O ATTATCH-A ∈ JOB) (O TABLE1 ∈ TABLE)):seed NIL>)
+   (#<A-COMP :objs ((CONST CARRY-IN ∈ CONVEYOR) (CONST TABLE-IN ∈ TABLE))
+             :seed NIL>)
+   (#<A-COMP :objs ((CONST TABLE-OUT ∈ TABLE) (CONST CARRY-OUT ∈ CONVEYOR))
+             :seed NIL>)
+   (#<A-COMP :objs ((O ARM1 ∈ ARM) (O TRAY-A ∈ TRAY)):seed NIL>
+    #<A-COMP :objs ((O TRAY-B ∈ TRAY) (O ARM2 ∈ ARM) (O TRAY-C ∈ TRAY))
+             :seed NIL>)
+   (#<A-COMP :objs ((O PART-B-0 ∈ COMPONENT) (O PART-A-0 ∈ COMPONENT)
+                    (O PART-C-0 ∈ COMPONENT) (O B-0 ∈ BASE))
+             :seed (O B-0 ∈ BASE)>
+    #<A-COMP :objs ((O PART-B-1 ∈ COMPONENT) (O PART-A-1 ∈ COMPONENT)
+                    (O PART-C-1 ∈ COMPONENT) (O B-1 ∈ BASE))
+             :seed (O B-1 ∈ BASE)>))
+
+#+END_SRC
+
+
+** cell-assembly の場合
+
+seed type を base にすると、baseはacとして検出されない・・・なぜ?
+
+#+BEGIN_SRC lisp
+
+
+
+#+END_SRC
+
+
+#+BEGIN_SRC lisp
+
+#+END_SRC
+
+* attributes
+
