@@ -110,50 +110,51 @@
   ;; 全部の順番からやってみて、ダメだったら最初からやり直しというアルゴリズム
   ;; greedy hill-climbingか
   (iter (with constants = (%constants static-facts))
-        (for ac = nil)                  ; (list abstract-component)
-        (for open = nil)                ; (list type)
-        (for closed = nil)              ; (list type)
-        (for tried-preds = nil)         ; (list predicate)
         (for all-types on (%all-types constants))
-        (iter
-          (with ptype = nil)
-          (for remaining =
-               (set-difference
-                all-types
-                closed))
-          (while remaining)
-          (for type = (first remaining))
-          (until (eq type ptype))
-          (setf ptype type)
-          ;; (break+ type ptype remaining)
-          (push type open)
-          (iter (for o in (remove-if-not (rcurry #'pddl-typep type) constants))
-                (push (make-abstract-component
-                       :components (list o)
-                       :seed o) ac))
-          (iter (while open)
-                (for t1 = (pop open))
-                (push t1 closed)
-                (iter (for p in (set-difference
-                                 (remove-if-not
-                                  (lambda (pred)
-                                    (some (rcurry #'pddl-typep t1)
-                                          (parameters pred)))
-                                  static-predicates)
-                                 tried-preds))
-                      (push p tried-preds)
-                      (for p-facts =
+        (collect (%cluster-objects/type
+                  all-types
+                  constants
+                  static-facts static-predicates))))
+
+(defun %cluster-objects/type (all-types constants static-facts static-predicates)
+  (iter
+    (with ac = nil)
+    (with open = nil)
+    (with closed = nil)
+    (with tried-preds = nil)
+    (with ptype = nil)
+    (for remaining = (set-difference all-types closed))
+    (while remaining)
+    (for type = (first remaining))
+    (until (eq type ptype))
+    (setf ptype type)
+    (push type open)
+    (iter (for o in (remove-if-not (rcurry #'pddl-typep type) constants))
+          (push (make-abstract-component :components (list o)
+                                         :seed o) ac))
+    (iter (while open)
+          (for t1 = (pop open))
+          (push t1 closed)
+          (iter (for p in (set-difference
                            (remove-if-not
-                            (curry (conjoin #'eqname #'predicate-more-specific-p) p)
-                            static-facts))
-                      (unless (predicates-connect-components p-facts ac)
-                        (setf ac (extend-components p-facts ac))
-                        (iter (for t2 in (remove-duplicates
-                                          (mapcar #'type (parameters p))))
-                              (unless (or (find t2 open)
-                                          (find t2 closed))
-                                (push t2 open)))))))
-        (collect ac)))
+                            (lambda (pred)
+                              (some (rcurry #'pddl-typep t1)
+                                    (parameters pred)))
+                            static-predicates)
+                           tried-preds))
+                (push p tried-preds)
+                (for p-facts =
+                     (remove-if-not
+                      (curry (conjoin #'eqname #'predicate-more-specific-p) p)
+                      static-facts))
+                (unless (predicates-connect-components p-facts ac)
+                  (setf ac (extend-components p-facts ac))
+                  (iter (for t2 in (remove-duplicates
+                                    (mapcar #'type (parameters p))))
+                        (unless (or (find t2 open)
+                                    (find t2 closed))
+                          (push t2 open))))))
+    (finally (return ac))))
 
 (defun static-fact-extends-ac-p (f ac)
   (intersection (parameters f) (parameters ac)))
