@@ -73,10 +73,10 @@
 @export 'make-abstract-component
 @export '(abstract-component-facts
           abstract-component-components
-          abstract-component-seeds
+          abstract-component-seed
           facts
           components
-          seeds)
+          seed)
 
 @export
 (defstruct abstract-component
@@ -111,21 +111,23 @@
   ;; greedy hill-climbingか
   (iter (with constants = (%constants static-facts))
         (for all-types on (%all-types constants))
-        (collect (%cluster-objects/type
-                  all-types
+        (collect (cluster-objects-with-seed
+                  (car all-types)
+                  (cdr all-types)
                   constants
                   static-facts static-predicates))))
 
-(defun %cluster-objects/type (all-types constants static-facts static-predicates)
+(defun cluster-objects-with-seed
+    (seed other-types constants static-facts static-predicates)
   (iter
     (with acs = nil)
     (with open = nil)
     (with closed = nil)
     (with tried-preds = nil)
     (with ptype = nil)
-    (for remaining = (set-difference all-types closed))
+    (for remaining = (set-difference other-types closed))
     (while remaining)
-    (for type = (first remaining))
+    (for type first seed then (first remaining))
     (until (eq type ptype))
     (setf ptype type)
     (push type open)
