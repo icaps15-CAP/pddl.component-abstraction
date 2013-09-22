@@ -121,4 +121,15 @@
   (finishes
     (abstract-components roverprob3726))
   (finishes
-    (best-abstract-components roverprob3726)))
+    (best-abstract-components roverprob3726))
+
+  (finishes
+    (abstract-components-with-seed
+     wood-prob-opt-1
+     (query-type woodworking :part))
+    (abstract-components-with-seed
+     roverprob3726
+     (query-type rover :rover))
+    (abstract-components-with-seed
+     cell-assembly-model2a-each-2
+     (query-type cell-assembly-eachparts :base))))
