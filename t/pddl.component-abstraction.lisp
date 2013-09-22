@@ -58,6 +58,11 @@
     ;; regression test
     (is-false (predicates-connect-components
                nil ac))
+    ;; refression test
+    (is-false (predicates-connect-components
+               (list sr0 sr1) nil))
+    (is-false (predicates-connect-components
+               nil nil))
 
     (is-false (predicates-connect-components
                (list sr0 sr1) ac))

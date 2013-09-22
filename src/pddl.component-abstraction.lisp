@@ -161,7 +161,7 @@
 
 @export
 (defun predicates-connect-components (facts ac)
-  (when facts
+  (when (and facts ac)
     (format *standard-output*
             "~2&testing components of type ~w,~& with static facts of type ~w"
             (mapcar #'type (parameters (first ac)))
