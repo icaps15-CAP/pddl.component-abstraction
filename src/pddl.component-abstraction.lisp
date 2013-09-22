@@ -118,7 +118,7 @@
 
 (defun %cluster-objects/type (all-types constants static-facts static-predicates)
   (iter
-    (with ac = nil)
+    (with acs = nil)
     (with open = nil)
     (with closed = nil)
     (with tried-preds = nil)
@@ -131,7 +131,7 @@
     (push type open)
     (iter (for o in (remove-if-not (rcurry #'pddl-typep type) constants))
           (push (make-abstract-component :components (list o)
-                                         :seed o) ac))
+                                         :seed o) acs))
     (iter (while open)
           (for t1 = (pop open))
           (push t1 closed)
@@ -147,24 +147,24 @@
                      (remove-if-not
                       (curry (conjoin #'eqname #'predicate-more-specific-p) p)
                       static-facts))
-                (unless (predicates-connect-components p-facts ac)
-                  (setf ac (extend-components p-facts ac))
+                (unless (predicates-connect-components p-facts acs)
+                  (setf acs (extend-components p-facts acs))
                   (iter (for t2 in (remove-duplicates
                                     (mapcar #'type (parameters p))))
                         (unless (or (find t2 open)
                                     (find t2 closed))
                           (push t2 open))))))
-    (finally (return ac))))
+    (finally (return acs))))
 
 (defun static-fact-extends-ac-p (f ac)
   (intersection (parameters f) (parameters ac)))
 
 @export
-(defun predicates-connect-components (facts ac)
-  (when (and facts ac)
+(defun predicates-connect-components (facts acs)
+  (when (and facts acs)
     (format *standard-output*
             "~2&testing components of type ~w,~& with static facts of type ~w"
-            (mapcar #'type (parameters (first ac)))
+            (mapcar #'type (parameters (first acs)))
             (mapcar #'type (parameters (first facts)))))
   (mapl
    (lambda (list)
@@ -180,17 +180,17 @@
                 (unionf fps ps)
                 ps)))
         facts :initial-value ps))
-     (mapcar #'parameters ac)))
+     (mapcar #'parameters acs)))
   nil)
 
-(defun extend-components (facts ac)
+(defun extend-components (facts acs)
   (terpri)
   (pprint-logical-block (*standard-output* facts :prefix "extending by:")
     (pprint-newline :mandatory)
     (dolist (f facts)
       (write f)
       (pprint-newline :mandatory)
-      (match (find-if (curry #'static-fact-extends-ac-p f) ac)
+      (match (find-if (curry #'static-fact-extends-ac-p f) acs)
         ((abstract-component (facts (place facts)) (components (place components)))
          (push f facts)
          (unionf components (parameters f)))
@@ -201,13 +201,13 @@
          (push (make-abstract-component
                 :facts (list f)
                 :components (parameters f))
-               ac)))))
-  ac)
+               acs)))))
+  acs)
 
-(defun decomposition-satisfactory-p (high ac)
+(defun decomposition-satisfactory-p (high acs)
   (every
    (lambda (component)
      (<= 2 (length (remove-duplicates (mapcar #'type (parameters component)))) high))
-   ac))
+   acs))
 
 
