@@ -14,6 +14,11 @@
 (defstruct abstract-component-task
   init goal ac)
 
+@export '(abstract-component-task-init
+          abstract-component-task-goal
+          abstract-component-task-ac
+          make-abstract-component-task)
+
 (defun print-ac-slot (s ac name body)
   (format s "~w " name)
   (let ((*print-escape* nil))
@@ -54,6 +59,10 @@
            (<= (length g1) (length g2))
            (subsetp (mapcar #'name g1)
                     (mapcar #'name g2))))))
+
+@export
+(defun abstract-component-task>= (ac-t1 ac-t2)
+  (abstract-component-task<= ac-t2 ac-t1))
 
 @export
 (defun abstract-component-task= (ac-t1 ac-t2)

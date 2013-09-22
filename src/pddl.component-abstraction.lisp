@@ -80,7 +80,7 @@
 
 @export
 (defstruct abstract-component
-  seed
+  (seed nil)
   (facts nil)
   (components nil))
 
