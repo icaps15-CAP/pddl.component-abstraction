@@ -9,6 +9,7 @@
         :pddl
         :pddl.component-abstraction
         :pddl.instances
+        :repl-utilities
         :guicho-utilities
         :alexandria
         :iterate

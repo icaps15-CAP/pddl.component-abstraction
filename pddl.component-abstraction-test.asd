@@ -14,6 +14,7 @@
   :depends-on (:pddl.component-abstraction
                :pddl.instances
                :guicho-utilities
+               :repl-utilities
                :fiveam)
   :components ((:module "t"
                 :components
