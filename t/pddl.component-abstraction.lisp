@@ -114,6 +114,11 @@
     ))
 
 (test :cluster-objects
+  ;; integration tests
   (finishes
     (cluster-objects (static-facts roverprob3726)
-                     (static-predicates roverprob3726))))
+                     (static-predicates roverprob3726)))
+  (finishes
+    (abstract-components roverprob3726))
+  (finishes
+    (best-abstract-components roverprob3726)))
