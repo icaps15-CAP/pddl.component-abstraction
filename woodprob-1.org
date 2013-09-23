@@ -1,4 +1,14 @@
 
+* 前提
+
+このパートは、
+
++ 主目標は、ループをwoodworkingに適用すること。
++ 並列性はあまり考えない。直列でいい。
+  + だからループは一種類検出できればいい
++ 探索空間の削減を目的とする
+
+まあ、並列化に使えないこともない。
 
 * task?
 
@@ -17,25 +27,26 @@ satの問題は要素数が増えただけなので手作業には適さない�
 
 ** DONE part init & goal
 
-| part | color | goalsize | available | unused | wood     | surface-condition | treatment       |
-|------+-------+----------+-----------+--------+----------+-------------------+-----------------|
-| p0   |       | medium   |           | t      |          |                   |                 |
-| p0   |       |          | t         |        |          | smooth            | varnished       |
-|------+-------+----------+-----------+--------+----------+-------------------+-----------------|
-| p1   |       | small    |           | t      |          |                   |                 |
-| p1   |       |          | t         |        | teak     | smooth            | varnished       |
-|------+-------+----------+-----------+--------+----------+-------------------+-----------------|
-| p2   | green |          | t         |        |          | smooth            |                 |
-| p2   | black | small    | t         |        | mahogany | rough             | colourfragments |
-|------+-------+----------+-----------+--------+----------+-------------------+-----------------|
-| p3   |       | large    |           | t      |          |                   |                 |
-| p3   |       |          | t         |        | mahogany | smooth            |                 |
-|------+-------+----------+-----------+--------+----------+-------------------+-----------------|
-| p4   |       | medium   |           | t      |          |                   |                 |
-| p4   |       |          | t         |        | teak     |                   | glazed          |
-
+| part    | color | goalsize | available | unused | wood     | surface-condition | treatment       |
+|---------+-------+----------+-----------+--------+----------+-------------------+-----------------|
+| p0-init |       | medium   |           | t      |          |                   |                 |
+| p0-goal |       |          | t         |        |          | smooth            | varnished       |
+|---------+-------+----------+-----------+--------+----------+-------------------+-----------------|
+| p1-init |       | small    |           | t      |          |                   |                 |
+| p1-goal |       |          | t         |        | teak     | smooth            | varnished       |
+|---------+-------+----------+-----------+--------+----------+-------------------+-----------------|
+| p2-init | green |          | t         |        |          | smooth            |                 |
+| p2-goal | black | small    | t         |        | mahogany | rough             | colourfragments |
+|---------+-------+----------+-----------+--------+----------+-------------------+-----------------|
+| p3-init |       | large    |           | t      |          |                   |                 |
+| p3-goal |       |          | t         |        | mahogany | smooth            |                 |
+|---------+-------+----------+-----------+--------+----------+-------------------+-----------------|
+| p4-init |       | medium   |           | t      |          |                   |                 |
+| p4-goal |       |          | t         |        | teak     |                   | glazed          |
 
 ** DONE abstract task
+
+0,1,3,4はかなり似ているが、詳細を見ると結構違う。
 
 | a-task  | part | color   | goalsize | available | unused | wood  | surface-condition | treatment  |
 |---------+------+---------+----------+-----------+--------+-------+-------------------+------------|
@@ -57,13 +68,12 @@ satの問題は要素数が増えただけなので手作業には適さない�
 ** DONE abstract task+
 
 allows *unspecified* in its arguments.
-such arguments are marked with =*=
-実装済み
+such arguments are marked with =+=
 
 | a-task  | part | color   | goalsize | available | unused | wood   | surface-condition | treatment   |
 |---------+------+---------+----------+-----------+--------+--------+-------------------+-------------|
 | t0-init | ?p   |         | ?size    |           | t      |        |                   |             |
-| t0-goal | ?p   |         |          | t         |        | ?wood* | ?condition*       | ?treatment* |
+| t0-goal | ?p   |         |          | t         |        | ?wood+ | ?condition+       | ?treatment+ |
 |---------+------+---------+----------+-----------+--------+--------+-------------------+-------------|
 | t1-init | ?p   | ?color1 |          | t         |        |        | ?condition1       |             |
 | t1-goal | ?p   | ?color2 | ?size    | t         |        | ?wood  | ?condition2       | ?treatment  |
@@ -253,20 +263,114 @@ ac として検出されない。(場所・アーム・機械との関係は移�
 とも紐付けられていない。そのためstatic graph上に現れない、あるいは孤立
 点になる。)
 
-* attributes
+* task/attributes
 
 + attributes を検出するには、init だけでなく goal も考える必要がある。
-  + その init は別にstaticである必要はない
+  + init/goal は別にstaticである必要はない
 + 変数が変わっても本当に適用できるものか???
 + unspecified 変数があっても本当に適用できるか?
 
-** 本当に適用できるか?
+** unspecified 変数を用いない場合の効果
 
-unspecified 変数を考えないとする。
-例えそうであっても、woodworking の sat-p03 では
+unspecified 変数を考えないとするとしても、
+woodworking の sat-p02 では abstract task 型の完全に一致するタスクが存
+在する。
 
-| p0   |       | medium   |           | t      |          |                   |                 |
-| p0   |       |          | t         |        |          | smooth            | varnished       |
-|------+-------+----------+-----------+--------+----------+-------------------+-----------------|
-| p1   |       | small    |           | t      |          |                   |                 |
-| p1   |       |          | t         |        | teak     | smooth            | varnished       |
+具体的には、part 型のオブジェクトを seed とした abstract-component を抽
+出し、これらに関するタスクを分類すると、
+
++ p4,6,7,9,12,23
++ p15,19,21,22
++ p0,2,18,20
++ p10,17
++ p8,14
++ p1,13
++ p11
++ p5
++ p16
++ p13
+
+の10分類に分類できる。
+それぞれのグループ内のタスク型は過不足なく同じになっている。
+もともと23個パーツがあったことを考えれば、結構探索空間が減ったのでは?
+
+** unspecified 変数を使うときの効果
+
+unspecified 変数を許すと、タスクの種類を劇的に減らすことができる。
+タスク同士の非推移的な関係 =<== を定義する。これはグラフが部分グラフに
+なっていることを示す。
+
+wood-prob-sat-20 を、abstract task としては たった2つのスキー
+ムの繰り返しに帰着できた。
+
+#+BEGIN_SRC lisp
+COMPONENT-ABSTRACTION-TEST> (mapcar #'dereference-abstract-task-bucket
+                                    (abstract-tasks wood-prob-sat-20 :part))
+
+ initializing component abstraction search with seed = (TYPE PART << WOODOBJ)
+ opening : t1 = (TYPE PART << WOODOBJ)
+ opening : t1 = (TYPE BOARD << WOODOBJ)
+ opening : t1 = (TYPE AWOOD)
+ opening : t1 = (TYPE SURFACE)
+ opening : t1 = (TYPE APARTSIZE)
+ opening : t1 = (TYPE ACOLOUR)
+ opening : t1 = (TYPE GRINDER << MACHINE)
+ opening : t1 = (TYPE PLANER << MACHINE)
+ opening : t1 = (TYPE HIGHSPEED-SAW << MACHINE)
+ opening : t1 = (TYPE SAW << MACHINE)
+ opening : t1 = (TYPE SPRAY-VARNISHER << MACHINE)
+ opening : t1 = (TYPE IMMERSION-VARNISHER << MACHINE)
+ opening : t1 = (TYPE GLAZER << MACHINE)
+(#<ABSTRACT-COMPONENT-TASK
+   :AC #<A-COMP :objs ((V ?PART2477 ∈ PART)) :seed NIL>
+   :INIT ((UNUSED) (GOALSIZE ?APARTSIZE2478) (SPRAY-VARNISH-COST) (GLAZE-COST)
+          (GRIND-COST) (PLANE-COST))
+   :GOAL ((AVAILABLE) (COLOUR ?ACOLOUR2479) (WOOD ?AWOOD2480)
+          (SURFACE-CONDITION ?SURFACE2481) (TREATMENT ?TREATMENTSTATUS2482))>
+ #<ABSTRACT-COMPONENT-TASK
+   :AC #<A-COMP :objs ((V ?PART2483 ∈ PART)) :seed NIL>
+   :INIT ((AVAILABLE) (COLOUR ?ACOLOUR2484) (WOOD ?AWOOD2485)
+          (SURFACE-CONDITION ?SURFACE2486) (TREATMENT ?TREATMENTSTATUS2487)
+          (GOALSIZE ?APARTSIZE2488) (SPRAY-VARNISH-COST) (GLAZE-COST)
+          (GRIND-COST) (PLANE-COST))
+   :GOAL ((AVAILABLE) (COLOUR ?ACOLOUR2489) (WOOD ?AWOOD2485)
+          (SURFACE-CONDITION ?SURFACE2490) (TREATMENT ?TREATMENTSTATUS2491))>)
+#+END_SRC
+
+** unspecified 変数を使う時の、全プラン出力までの流れ
+
+unspecified を通常のオブジェクトとして扱ってループプランを組み立てる。
+その後、後処理で無駄な工程を取り除く。具体的には、
+
++ オブジェクトに unspecified を追加する
++ 変数のまま単一ベースプランを解く。steady stateを検出できる。ループ l(?p0,?p1,...)
++ taskのパラメータを用いて、taskの数だけループの中身を実体化する。
+  + l(a, *U*, b, c, ...) U = unspecified
+  + l(a, d,   b, *U*, ...) 
++ 繰り返し l ごとに、unspecified を引数に含む述語を steady-state の
+  goal から取り除く。
++ 取り除いた上でオプティマイザにかける。ループのgoalに含まれていないア
+  クションは簡単に取り除くことができる
++ init からも取り除く。
+
+** うだうだ言っているけど、本当に適当なのか?
+
+一番根本的な問題として、
+
+*タスクの変数がどのように実体化されても、ループ中の動きが同じ* だと保証
+ できないといけない。実際のところ、色々と問題がある。
+
++ 色を塗る作業は、色によって対応している機械が違う
+  + 同じプランではない可能性がある。同じプランである可能性もある。
+  + 例えば、機械 m1 が red と blue , m2 が green を濡れる場合、
+  + color パラメータが red の task と blue の task は影響されないが、
+    green の task は別になる。
++ 特定の対応している機械が複数ある。 immersion-vernisher も
+  spray-varnisher も, 色を塗ってニスを塗ることができる。もともと、工程
+  の手順は一通りと決めているので、どうしたものか。
++ 切り出す作業は、board に、切り出せるサイズの制限があるので、仮に同じ種類
+  の木材が指定されている part が沢山あった場合、途中で別の board に切
+  り替える必要がある。
+
+どうすればいいのか・・・。
+より一般的に使いたいのだが。

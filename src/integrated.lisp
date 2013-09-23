@@ -13,7 +13,7 @@
    (let* ((sfs (static-facts *problem*))
           (constants (%constants sfs)))
      (cluster-objects-with-seed
-      seed-type
+      (query-type (domain *problem*) seed-type)
       (remove seed-type (%all-types constants))
       constants
       sfs

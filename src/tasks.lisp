@@ -38,6 +38,8 @@
   (print-unreadable-object (ac-task s :type t)
     (with-slots (ac init goal) ac-task
       (pprint-logical-block (s nil)
+        (format s "~w ~a " :ac ac)
+        (pprint-newline :linear s)
         (print-ac-slot s ac :init init)
         (pprint-newline :linear s)
         (print-ac-slot s ac :goal goal)))))

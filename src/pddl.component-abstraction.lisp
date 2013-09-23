@@ -91,7 +91,7 @@
 
 (defmethod print-object ((ac abstract-component) s)
   (print-unreadable-object (ac s)
-    (format s "~<A-COMP ~;:objs ~w~_:seed ~w~;~:>"
+    (format s "~<A-COMP ~;:objs ~w ~_:seed ~w~;~:>"
             (list (parameters ac)
                   (abstract-component-seed ac)))))
 
@@ -125,6 +125,8 @@
     (with closed = nil)
     (with tried-preds = nil)
     (with ptype = nil)
+    (initially
+     (format t "~% initializing component abstraction search with seed = ~a" seed))
     (for remaining = (set-difference other-types closed))
     (while remaining)
     (for type first seed then (first remaining))
@@ -136,6 +138,7 @@
                                          :seed o) acs))
     (iter (while open)
           (for t1 = (pop open))
+          (format t "~% opening : t1 = ~a" t1)
           (push t1 closed)
           (iter (for p in (set-difference
                            (remove-if-not
@@ -163,11 +166,6 @@
 
 @export
 (defun predicates-connect-components (facts acs)
-  (when (and facts acs)
-    (format *standard-output*
-            "~2&testing components of type ~w,~& with static facts of type ~w"
-            (mapcar #'type (parameters (first acs)))
-            (mapcar #'type (parameters (first facts)))))
   (mapl
    (lambda (list)
      (destructuring-bind (a . rest) list
@@ -186,24 +184,16 @@
   nil)
 
 (defun extend-components (facts acs)
-  (terpri)
-  (pprint-logical-block (*standard-output* facts :prefix "extending by:")
-    (pprint-newline :mandatory)
-    (dolist (f facts)
-      (write f)
-      (pprint-newline :mandatory)
-      (match (find-if (curry #'static-fact-extends-ac-p f) acs)
-        ((abstract-component (facts (place facts)) (components (place components)))
-         (push f facts)
-         (unionf components (parameters f)))
-        (nil
-         (format t "~%~4tneither c1 nor c2 are part of a previously built component,
-~4ta new component containing f , c1 and c2.
-~4t ~w" f)
-         (push (make-abstract-component
-                :facts (list f)
-                :components (parameters f))
-               acs)))))
+  (dolist (f facts)
+    (match (find-if (curry #'static-fact-extends-ac-p f) acs)
+      ((abstract-component (facts (place facts)) (components (place components)))
+       (push f facts)
+       (unionf components (parameters f)))
+      (nil
+       (push (make-abstract-component
+              :facts (list f)
+              :components (parameters f))
+             acs))))
   acs)
 
 (defun decomposition-satisfactory-p (high acs)
