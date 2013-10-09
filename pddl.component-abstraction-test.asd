@@ -13,6 +13,9 @@
   :license ""
   :depends-on (:pddl.component-abstraction
                :pddl.instances
+               :pddl.instances.cell-assembly-eachparts
+               :pddl.instances.rover
+               :pddl.instances.woodworking
                :guicho-utilities
                :repl-utilities
                :fiveam)

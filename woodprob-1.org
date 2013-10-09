@@ -255,7 +255,6 @@ such arguments are marked with =+=
 
 #+END_SRC
 
-
 ** cell-assembly の場合
 
 seed type を base にすると、baseはグラフ上の孤立点として考えられるため、
