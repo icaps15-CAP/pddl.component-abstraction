@@ -79,16 +79,18 @@
         (format s "~w ~a " :ac ac)
         (pprint-newline :linear s)
         (print-ac-slot s ac :attr attributes)
-        (pprint-newline :linear s)
         (when init
-          (print-ac-slot s ac :init init)
-          (pprint-newline :linear s))
+          (pprint-newline :linear s)
+          (print-ac-slot s ac :init init))
         (when goal
-          (print-ac-slot s ac :goal goal)
-          (pprint-newline :linear s))
-        (print-ac-slot s ac :unary-init unary-init)
-        (pprint-newline :linear s)
-        (print-ac-slot s ac :unary-goal unary-goal))))))
+          (pprint-newline :linear s)
+          (print-ac-slot s ac :goal goal))
+        (when unary-init
+          (pprint-newline :linear s)
+          (print-ac-slot s ac :unary-init unary-init))
+        (when unary-goal
+          (pprint-newline :linear s)
+          (print-ac-slot s ac :unary-goal unary-goal)))))))
 
 @export
 (defun facts-concerning (ac facts)
