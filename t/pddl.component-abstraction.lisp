@@ -133,3 +133,4 @@
     (abstract-components-with-seed
      cell-assembly-model2a-each-2
      (query-type cell-assembly-eachparts :base))))
+

@@ -106,7 +106,7 @@
 @export
 (defun cluster-objects (static-facts
                         static-predicates)
-  ;; follow the expression by adi literally
+  ;; literally following the formal expression by adi botea
   ;; 全部の順番からやってみて、ダメだったら最初からやり直しというアルゴリズム
   ;; greedy hill-climbingか
   (iter (with constants = (%constants static-facts))
