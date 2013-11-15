@@ -25,4 +25,33 @@
 
 (defun abstract-component-task-strict= (t1 t2)
   (and (abstract-component-task= t1 t2)
-       ))
+       (strictly-task= t1 t2)))
+
+(defun strictly-task= (t1 t2)
+  (and (state-equal-except-components
+        (abstract-component-task-multiary-init t1)
+        (abstract-component-task-multiary-init t2)
+        (abstract-component-components 
+         (abstract-component-task-ac t1))
+        (abstract-component-components 
+         (abstract-component-task-ac t2)))
+       (state-equal-except-components
+        (abstract-component-task-multiary-goal t1)
+        (abstract-component-task-multiary-goal t2)
+        (abstract-component-components 
+         (abstract-component-task-ac t1))
+        (abstract-component-components 
+         (abstract-component-task-ac t2)))))
+
+;; abstract-component-task-multiary-goal
+
+(defun state-equal-except-components (state1 state2 comps1 comps2)
+  (iter (for f1 in state1)
+        (for f2 in state2)
+        (always
+         (iter (for p1 in (parameters f1))
+               (for p2 in (parameters f2))
+               (always
+                (or (and (find p1 comps1) (find p2 comps2))
+                    (eq p1 p2)))))))
+

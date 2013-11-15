@@ -7,9 +7,41 @@
 
 @export '(abstract-component-task-init
           abstract-component-task-goal
+          abstract-component-task-unary-init
+          abstract-component-task-unary-goal
+          abstract-component-task-multiary-init
+          abstract-component-task-multiary-goal
           abstract-component-task-attributes
           abstract-component-task-ac
           make-abstract-component-task)
+
+(defun unary-p (f)
+  (match f
+    ((pddl-atomic-state parameters)
+     (<= (length parameters) 1))
+    ((pddl-function-state parameters)
+     (= 0 (length parameters)))))
+
+(defun abstract-component-task-unary-goal (ac)
+  (remove-if-not
+   #'unary-p
+   (abstract-component-task-goal ac)))
+
+(defun abstract-component-task-unary-init (ac)
+  (remove-if-not
+   #'unary-p
+   (abstract-component-task-init ac)))
+
+(defun abstract-component-task-multiary-goal (ac)
+  (remove-if
+   #'unary-p
+   (abstract-component-task-goal ac)))
+
+(defun abstract-component-task-multiary-init (ac)
+  (remove-if
+   #'unary-p
+   (abstract-component-task-init ac)))
+
 
 (defun print-ac-slot (s ac name body)
   (format s "~w " name)
@@ -37,16 +69,26 @@
 
 (defmethod print-object ((ac-task abstract-component-task) s)
   (print-unreadable-object (ac-task s :type t)
-    (with-slots (ac attributes init goal) ac-task
+    (with-slots (ac attributes) ac-task
+      (with-accessors 
+            ((unary-init abstract-component-task-unary-init)
+             (unary-goal abstract-component-task-unary-goal)
+             (init abstract-component-task-multiary-init)
+             (goal abstract-component-task-multiary-goal)) ac-task
       (pprint-logical-block (s nil)
         (format s "~w ~a " :ac ac)
         (pprint-newline :linear s)
         (print-ac-slot s ac :attr attributes)
         (pprint-newline :linear s)
-        (print-ac-slot s ac :init init)
+        (when init
+          (print-ac-slot s ac :init init)
+          (pprint-newline :linear s))
+        (when goal
+          (print-ac-slot s ac :goal goal)
+          (pprint-newline :linear s))
+        (print-ac-slot s ac :unary-init unary-init)
         (pprint-newline :linear s)
-        (print-ac-slot s ac :goal goal)))))
-
+        (print-ac-slot s ac :unary-goal unary-goal))))))
 
 @export
 (defun facts-concerning (ac facts)
@@ -56,7 +98,6 @@
              (member p (parameters ac)))
            (parameters f)))
    (set-difference facts (abstract-component-facts ac))))
-
 
 @export
 (defun task (ac *problem*)
