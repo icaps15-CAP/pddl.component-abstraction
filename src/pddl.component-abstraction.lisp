@@ -42,20 +42,30 @@
 
 @export
 (defun predicate-ignored-p-JAIR-2415 (predicate)
-  (or (= 0 (length (parameters predicate)))
-      (= 1 (length (parameters predicate)))
-      (and (< 1 (length (parameters predicate)))
-           (block comb
-             (map-combinations
-              (lambda (list)
-                (when (apply #'eq list)
-                  (return-from comb t)))
-              (mapcar #'type (parameters predicate)) :length 2)
-             nil))))
+  (match predicate
+    ((pddl-atomic-state parameters)
+     (or (< (length parameters) 2)
+         (block comb
+           (map-combinations
+            (lambda (list)
+              (when (apply #'eq list)
+                (return-from comb t)))
+            (mapcar #'type parameters) :length 2)
+           nil)))
+    ((pddl-function-state parameters)
+     (or (< (length parameters) 1)
+         (and (<= 2 (length parameters))
+              (block comb
+                (map-combinations
+                 (lambda (list)
+                   (when (apply #'eq list)
+                     (return-from comb t)))
+                 (mapcar #'type parameters) :length 2)
+                nil))))))
 
 @export
 (defun static-facts (problem)
-  (remove-if (disjoin (rcurry #'typep 'pddl-function-state)
+  (remove-if (disjoin ;; (rcurry #'typep 'pddl-function-state)
                       #'fluent-predicate-p
                       #'predicate-ignored-p-JAIR-2415)
              (init problem)))

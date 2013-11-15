@@ -2,16 +2,6 @@
 (cl-syntax:use-syntax :annot)
 
 @export
-(defun facts-concerning (ac facts)
-  (remove-if-not
-   (lambda (f)
-     (some (lambda (p)
-             (member p (parameters ac)))
-           (parameters f)))
-   (set-difference facts (abstract-component-facts ac))))
-
-
-@export
 (defun abstract-tasks (*problem* type)
   (let ((type (query-type (domain *problem*) type)))
     (mapcar (rcurry #'task *problem*)
@@ -22,3 +12,17 @@
                       acs))
               (abstract-components-with-seed *problem* type)))))
 
+
+@export
+(defun categorize-tasks (tasks method)
+  (categorize-by-equality
+   tasks
+   (case method
+     (:strict #'abstract-component-task-strict=)
+     (:weak   #'abstract-component-task=)
+     (:loose  #'abstract-component-task<=>))
+   :transitive nil))
+
+(defun abstract-component-task-strict= (t1 t2)
+  (and (abstract-component-task= t1 t2)
+       ))

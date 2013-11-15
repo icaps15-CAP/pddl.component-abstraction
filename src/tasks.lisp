@@ -19,10 +19,18 @@
          (pprint-exit-if-list-exhausted)
          (let ((f (pprint-pop)))
            (format s "(~{~a~^ ~})"
-                   (cons (name f)
-                         (mapcar #'name 
-                                 (set-difference (parameters f)
-                                                 (parameters ac)))))
+                   (match f
+                     ((pddl-atomic-state name parameters)
+                      (cons name
+                            (mapcar #'name 
+                                    (set-difference parameters
+                                                    (parameters ac)))))
+                     ((pddl-function-state name parameters value)
+                      (list* name
+                             value
+                             (mapcar #'name 
+                                     (set-difference parameters
+                                                     (parameters ac)))))))
            (pprint-exit-if-list-exhausted)
            (write-char #\Space s)
            (pprint-newline :fill s))))))
@@ -38,6 +46,17 @@
         (print-ac-slot s ac :init init)
         (pprint-newline :linear s)
         (print-ac-slot s ac :goal goal)))))
+
+
+@export
+(defun facts-concerning (ac facts)
+  (remove-if-not
+   (lambda (f)
+     (some (lambda (p)
+             (member p (parameters ac)))
+           (parameters f)))
+   (set-difference facts (abstract-component-facts ac))))
+
 
 @export
 (defun task (ac *problem*)
