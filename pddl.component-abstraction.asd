@@ -22,16 +22,16 @@
                :alexandria
                :guicho-utilities
                :iterate)
-  :components ((:file "src/package")
-               (:module "src"
+  :components ((:module "src"
                 :components
-                ((:file "pddl.component-abstraction")
+                ((:file "package")
+                 (:file "pddl.component-abstraction")
                  (:file "abstract-type")
                  (:file "integrated")
                  (:file :tasks)
                  (:file :extract-tasks)
                  (:file :dereference))
-                :depends-on ("src/package")))
+                :serial t))
   :description ""
   :long-description
   #.(with-open-file (stream (merge-pathnames
