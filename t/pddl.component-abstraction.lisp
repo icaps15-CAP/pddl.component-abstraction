@@ -22,7 +22,7 @@
 
 (test :predicate-connects-components
   (let* ((*domain* rover)
-         (*problem* roverprob03)
+         (*problem* roverprob10)
          (waypoint (object *problem* :waypoint0))
 
          (c0 (object *problem* :camera0))
