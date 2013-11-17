@@ -157,6 +157,7 @@
 
 (defun cluster-objects-with-seed
     (seed other-types constants static-facts static-predicates)
+  "static predicates are ungrounded while static facts are grounded."
   (iter
     (with acs = nil)
     (with open = nil)
