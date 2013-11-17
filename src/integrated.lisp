@@ -18,7 +18,7 @@
       constants
       sfs
       (static-predicates *problem*)))
-   #'abstract-type<=> :transitive nil))
+   #'abstract-type= :transitive nil))
 
 
 

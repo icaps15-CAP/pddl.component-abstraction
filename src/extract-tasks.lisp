@@ -4,13 +4,14 @@
 @export
 (defun abstract-tasks (*problem* type)
   (let ((type (query-type (domain *problem*) type)))
-    (mapcar (rcurry #'task *problem*)
-             (find-if
-              (lambda (acs)
+    (mapcar (curry #'mapcar (rcurry #'task *problem*))
+            (remove-if-not
+             (lambda (acs)
                 (some (lambda (ac)
-                        (eq type (type (abstract-component-seed ac))))
+                        (when-let ((seed (abstract-component-seed ac)))
+                          (eq type (type seed))))
                       acs))
-              (abstract-components-with-seed *problem* type)))))
+             (abstract-components-with-seed *problem* type)))))
 
 
 @export
