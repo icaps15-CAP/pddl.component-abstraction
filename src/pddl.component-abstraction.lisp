@@ -83,6 +83,8 @@
 @export 'make-abstract-component
 @export '(abstract-component-facts
           abstract-component-components
+          abstract-component-attributes
+          abstract-component-attribute-facts
           abstract-component-seed
           facts
           components
@@ -92,7 +94,9 @@
 (defstruct abstract-component
   (seed nil)
   (facts nil)
-  (components nil))
+  (components nil)
+  (attributes nil)
+  (attribute-facts nil))
 
 (defmethod parameters ((ac abstract-component))
   (abstract-component-components ac))
@@ -162,13 +166,15 @@
                      (remove-if-not
                       (curry (conjoin #'eqname #'predicate-more-specific-p) p)
                       static-facts))
-                (unless (predicates-connect-components p-facts acs)
-                  (setf acs (extend-components p-facts acs))
-                  (iter (for t2 in (remove-duplicates
-                                    (mapcar #'type (parameters p))))
-                        (unless (or (find t2 open)
-                                    (find t2 closed))
-                          (push t2 open))))))
+                (if (predicates-connect-components p-facts acs)
+                    (setf acs (add-attributes p-facts acs))
+                    (progn
+                      (setf acs (extend-components p-facts acs))
+                      (iter (for t2 in (remove-duplicates
+                                        (mapcar #'type (parameters p))))
+                            (unless (or (find t2 open)
+                                        (find t2 closed))
+                              (push t2 open)))))))
     (finally (return acs))))
 
 (defun static-fact-extends-ac-p (f ac)
@@ -190,8 +196,18 @@
                 (unionf fps ps)
                 ps)))
         facts :initial-value ps))
-     (mapcar #'parameters acs)))
+     (mapcar #'abstract-component-components acs)))
   nil)
+
+(defun add-attributes (facts acs)
+  (dolist (f facts)
+    (match (find-if (curry #'static-fact-extends-ac-p f) acs)
+      ((abstract-component (attribute-facts (place facts))
+                           (attributes (place attrs))
+                           components)
+       (push f facts)
+       (unionf attrs (set-difference (parameters f) components)))))
+  acs)
 
 (defun extend-components (facts acs)
   (dolist (f facts)
