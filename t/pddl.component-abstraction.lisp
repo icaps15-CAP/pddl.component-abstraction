@@ -22,7 +22,7 @@
 
 (test :predicate-connects-components
   (let* ((*domain* rover)
-         (*problem* roverprob7126)
+         (*problem* roverprob03)
          (waypoint (object *problem* :waypoint0))
 
          (c0 (object *problem* :camera0))
@@ -116,19 +116,19 @@
 (test :cluster-objects
   ;; integration tests
   (finishes
-    (cluster-objects (static-facts roverprob3726)
-                     (static-predicates roverprob3726)))
+    (cluster-objects (static-facts roverprob03)
+                     (static-predicates roverprob03)))
   (finishes
-    (abstract-components roverprob3726))
+    (abstract-components roverprob03))
   (finishes
-    (best-abstract-components roverprob3726))
+    (best-abstract-components roverprob03))
 
   (finishes
     (abstract-components-with-seed
      wood-prob-opt-1
      (query-type woodworking :part))
     (abstract-components-with-seed
-     roverprob3726
+     roverprob03
      (query-type rover :rover))
     (abstract-components-with-seed
      cell-assembly-model2a-each-2
