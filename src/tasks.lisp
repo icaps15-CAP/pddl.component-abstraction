@@ -42,55 +42,41 @@
    #'unary-p
    (abstract-component-task-init ac)))
 
-
-(defun print-ac-slot (s ac name body)
+(defun print-ac-task-slot (s ac-task name body)
   (format s "~w " name)
-  (let ((*print-escape* nil))
+  (let ((*print-escape* nil)
+        (ac (abstract-component-task-ac ac-task)))
     (pprint-logical-block (s body :prefix "(" :suffix ")")
       (loop
          (pprint-exit-if-list-exhausted)
          (let ((f (pprint-pop)))
            (format s "(~{~a~^ ~})"
                    (match f
-                     ((pddl-atomic-state name parameters)
-                      (cons name
-                            (mapcar #'name 
-                                    (set-difference parameters
-                                                    (parameters ac)))))
                      ((pddl-function-state name parameters value)
                       (list* name
                              value
                              (mapcar #'name 
                                      (set-difference parameters
-                                                     (parameters ac)))))))
+                                                     (parameters ac)))))
+                     ((pddl-predicate name parameters)
+                      (cons name
+                            (mapcar #'name 
+                                    (set-difference parameters
+                                                    (parameters ac)))))))
            (pprint-exit-if-list-exhausted)
            (write-char #\Space s)
            (pprint-newline :fill s))))))
 
 (defmethod print-object ((ac-task abstract-component-task) s)
   (print-unreadable-object (ac-task s :type t)
-    (with-slots (ac attributes) ac-task
-      (with-accessors 
-            ((unary-init abstract-component-task-unary-init)
-             (unary-goal abstract-component-task-unary-goal)
-             (init abstract-component-task-multiary-init)
-             (goal abstract-component-task-multiary-goal)) ac-task
-      (pprint-logical-block (s nil)
-        (format s "~w ~a " :ac ac)
-        (pprint-newline :linear s)
-        (print-ac-slot s ac :attr attributes)
-        (when init
-          (pprint-newline :linear s)
-          (print-ac-slot s ac :init init))
-        (when goal
-          (pprint-newline :linear s)
-          (print-ac-slot s ac :goal goal))
-        (when unary-init
-          (pprint-newline :linear s)
-          (print-ac-slot s ac :unary-init unary-init))
-        (when unary-goal
-          (pprint-newline :linear s)
-          (print-ac-slot s ac :unary-goal unary-goal)))))))
+    (pprint-logical-block (s nil)
+      (format s "~w ~w " :ac (abstract-component-task-ac ac-task))
+      ;; (print-ac-slot-nonnil s ac-task #'abstract-component-task-attributes :attrs+costs #'print-ac-task-slot)
+      (print-ac-slot-nonnil s ac-task #'abstract-component-task-multiary-init :init #'print-ac-task-slot)
+      (print-ac-slot-nonnil s ac-task #'abstract-component-task-multiary-goal :goal #'print-ac-task-slot)
+      ;; (print-ac-slot-nonnil s ac-task #'abstract-component-task-unary-init :unary-init #'print-ac-task-slot)
+      ;; (print-ac-slot-nonnil s ac-task #'abstract-component-task-unary-goal :unary-goal #'print-ac-task-slot)
+      )))
 
 @export
 (defun facts-concerning (ac facts)

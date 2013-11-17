@@ -103,11 +103,35 @@
 (defmethod (setf parameters) (new (ac abstract-component))
   (setf (abstract-component-components ac) new))
 
+(defun print-ac-slot-nonnil (s ac accessor name printer &optional first)
+  (let ((value (funcall accessor ac)))
+    (when value
+      (unless first
+        (pprint-newline :linear s))
+      (funcall printer s ac name value))))
+
+(defun printer1 (s ac name value)
+  (format s "~w " name)
+  (let ((*print-escape* nil))
+    (pprint-logical-block (s value :prefix "(" :suffix ")")
+      (loop
+         (pprint-exit-if-list-exhausted)
+         (let ((f (pprint-pop)))
+           (write (name f) :stream s)
+           (pprint-exit-if-list-exhausted)
+           (write-char #\Space s)
+           (pprint-newline :fill s)))))
+  (write-char #\Space s))
+
+(defun printer2 (s ac name value)
+  (format s "~w ~w " name value))
+
 (defmethod print-object ((ac abstract-component) s)
   (print-unreadable-object (ac s)
-    (format s "~<A-COMP ~;:objs ~w ~_:seed ~w~;~:>"
-            (list (parameters ac)
-                  (abstract-component-seed ac)))))
+    (pprint-logical-block (s nil :prefix "A-COMP ")
+      (print-ac-slot-nonnil s ac #'abstract-component-components :objs #'printer1 t)
+      (print-ac-slot-nonnil s ac #'abstract-component-seed :seed #'printer2)
+      (print-ac-slot-nonnil s ac #'abstract-component-attributes :attrs #'printer1))))
 
 (defun %constants (static-facts)
   (remove-duplicates
