@@ -45,12 +45,13 @@
 (defun print-ac-task-slot (s ac-task name body)
   (format s "~w " name)
   (let ((*print-escape* nil)
+        (*print-length* 5)
         (ac (abstract-component-task-ac ac-task)))
     (pprint-logical-block (s body :prefix "(" :suffix ")")
       (loop
          (pprint-exit-if-list-exhausted)
          (let ((f (pprint-pop)))
-           (format s "(~{~a~^ ~})"
+           (format s "~a"
                    (match f
                      ((pddl-function-state name parameters value)
                       (list* name
