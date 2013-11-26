@@ -3,9 +3,11 @@
 
 @export
 (defstruct abstract-component-task
+  (problem *problem*)
   attributes init goal ac)
 
-@export '(abstract-component-task-init
+@export '(abstract-component-task-p
+          abstract-component-task-init
           abstract-component-task-goal
           abstract-component-task-unary-init
           abstract-component-task-unary-goal
@@ -14,6 +16,14 @@
           abstract-component-task-attributes
           abstract-component-task-ac
           make-abstract-component-task)
+
+(defmethod problem ((ac abstract-component-task))
+  @inline abstract-component-task-problem
+  (abstract-component-task-problem ac))
+
+(defmethod domain((ac abstract-component-task))
+  @inline abstract-component-task-problem
+  (domain (abstract-component-task-problem ac)))
 
 (defun unary-p (f)
   (match f
@@ -75,8 +85,8 @@
       ;; (print-ac-slot-nonnil s ac-task #'abstract-component-task-attributes :attrs+costs #'print-ac-task-slot)
       (print-ac-slot-nonnil s ac-task #'abstract-component-task-multiary-init :init #'print-ac-task-slot)
       (print-ac-slot-nonnil s ac-task #'abstract-component-task-multiary-goal :goal #'print-ac-task-slot)
-      ;; (print-ac-slot-nonnil s ac-task #'abstract-component-task-unary-init :unary-init #'print-ac-task-slot)
-      ;; (print-ac-slot-nonnil s ac-task #'abstract-component-task-unary-goal :unary-goal #'print-ac-task-slot)
+      (print-ac-slot-nonnil s ac-task #'abstract-component-task-unary-init :unary-init #'print-ac-task-slot)
+      (print-ac-slot-nonnil s ac-task #'abstract-component-task-unary-goal :unary-goal #'print-ac-task-slot)
       )))
 
 @export

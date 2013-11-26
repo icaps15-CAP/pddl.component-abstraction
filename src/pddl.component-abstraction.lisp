@@ -92,11 +92,19 @@
 
 @export
 (defstruct abstract-component
+  (problem *problem*)
   (seed nil)
   (facts nil)
   (components nil)
   (attributes nil)
   (attribute-facts nil))
+
+(defmethod problem ((ac abstract-component))
+  @inline abstract-component-problem
+  (abstract-component-problem ac))
+(defmethod domain ((ac abstract-component))
+  @inline abstract-component-problem
+  (domain (abstract-component-problem ac)))
 
 (defmethod parameters ((ac abstract-component))
   (abstract-component-components ac))
