@@ -3,8 +3,7 @@
 
 @export
 (defstruct abstract-component-task
-  (problem *problem*)
-  attributes init goal ac)
+  (problem *problem*) init goal ac)
 
 @export '(abstract-component-task-p
           abstract-component-task-init
@@ -13,7 +12,6 @@
           abstract-component-task-unary-goal
           abstract-component-task-multiary-init
           abstract-component-task-multiary-goal
-          abstract-component-task-attributes
           abstract-component-task-ac
           make-abstract-component-task)
 
@@ -82,7 +80,6 @@
   (print-unreadable-object (ac-task s :type t)
     (pprint-logical-block (s nil)
       (format s "~w ~w " :ac (abstract-component-task-ac ac-task))
-      ;; (print-ac-slot-nonnil s ac-task #'abstract-component-task-attributes :attrs+costs #'print-ac-task-slot)
       (print-ac-slot-nonnil s ac-task #'abstract-component-task-multiary-init :init #'print-ac-task-slot)
       (print-ac-slot-nonnil s ac-task #'abstract-component-task-multiary-goal :goal #'print-ac-task-slot)
       (print-ac-slot-nonnil s ac-task #'abstract-component-task-unary-init :unary-init #'print-ac-task-slot)
