@@ -87,6 +87,7 @@
           abstract-component-attribute-facts
           abstract-component-seed
           facts
+          attributes
           components
           seed)
 
