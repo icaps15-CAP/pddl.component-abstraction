@@ -102,23 +102,25 @@
 (defun task (ac *problem*)
   (make-abstract-component-task
    :ac ac
-   :attributes (facts-concerning ac (static-facts *problem*))
    :init (facts-concerning ac (set-difference (init *problem*) (static-facts *problem*)))
    :goal (facts-concerning ac (positive-predicates (goal *problem*)))))
 
 @export
-(defun abstract-component-task<= (ac-t1 ac-t2)
-  (with-slots ((a1 attributes) (i1 init) (g1 goal) (ac1 ac)) ac-t1
-    (with-slots ((a2 attributes) (i2 init) (g2 goal) (ac2 ac)) ac-t2
-      (and (<= (length a1) (length a2))
-           (subsetp (mapcar #'name a1)
-                    (mapcar #'name a2))
-           (<= (length i1) (length i2))
-           (subsetp (mapcar #'name i1)
-                    (mapcar #'name i2))
-           (<= (length g1) (length g2))
-           (subsetp (mapcar #'name g1)
-                    (mapcar #'name g2))))))
+(defun abstract-component-task<= (t1 t2)
+  (match t1
+    ((abstract-component-task
+      (init i1) (goal g1)
+      (ac (abstract-component (attribute-facts af1))))
+     (match t2
+       ((abstract-component-task
+         (init i2) (goal g2)
+         (ac (abstract-component (attribute-facts af2))))
+        (and (and (<= (length af1) (length af2))
+                  (subsetp af1 af2 :key #'name))
+             (and (<= (length i1) (length i2))
+                  (subsetp i1 i2 :key #'name))
+             (and (<= (length g1) (length g2))
+                  (subsetp g1 g2 :key #'name))))))))
 
 @export
 (defun abstract-component-task>= (ac-t1 ac-t2)
