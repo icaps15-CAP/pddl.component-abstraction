@@ -21,7 +21,8 @@
    (case method
      (:strict #'abstract-component-task-strict=)
      (:weak   #'abstract-component-task=)
-     (:loose  #'abstract-component-task<=>))
+     (:loose  #'abstract-component-task<=>)
+     (t method))
    :transitive nil))
 
 (defun abstract-component-task-strict= (t1 t2)
