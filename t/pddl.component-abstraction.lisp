@@ -22,7 +22,7 @@
 
 (test :predicate-connects-components
   (let* ((*domain* rover)
-         (*problem* roverprob08)
+         (*problem* roverprob10)
          (waypoint (object *problem* :waypoint0))
 
          (c0 (object *problem* :camera0))
@@ -132,5 +132,12 @@
      (query-type rover :rover))
     (abstract-components-with-seed
      cell-assembly-model2a-each-2
-     (query-type cell-assembly-eachparts :base))))
+     (query-type cell-assembly-eachparts :base)))
+
+  (finishes
+    (abstract-tasks roverprob03 :rover))
+
+  (finishes
+    (mapcar (rcurry #'categorize-tasks :loose)
+            (abstract-tasks roverprob03 :rover))))
 

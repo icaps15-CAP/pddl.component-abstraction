@@ -42,20 +42,30 @@
 
 @export
 (defun predicate-ignored-p-JAIR-2415 (predicate)
-  (or (= 0 (length (parameters predicate)))
-      (= 1 (length (parameters predicate)))
-      (and (< 1 (length (parameters predicate)))
-           (block comb
-             (map-combinations
-              (lambda (list)
-                (when (apply #'eq list)
-                  (return-from comb t)))
-              (mapcar #'type (parameters predicate)) :length 2)
-             nil))))
+  (match predicate
+    ((pddl-atomic-state parameters)
+     (or (< (length parameters) 2)
+         (block comb
+           (map-combinations
+            (lambda (list)
+              (when (apply #'eq list)
+                (return-from comb t)))
+            (mapcar #'type parameters) :length 2)
+           nil)))
+    ((pddl-function-state parameters)
+     (or (< (length parameters) 1)
+         (and (<= 2 (length parameters))
+              (block comb
+                (map-combinations
+                 (lambda (list)
+                   (when (apply #'eq list)
+                     (return-from comb t)))
+                 (mapcar #'type parameters) :length 2)
+                nil))))))
 
 @export
 (defun static-facts (problem)
-  (remove-if (disjoin (rcurry #'typep 'pddl-function-state)
+  (remove-if (disjoin ;; (rcurry #'typep 'pddl-function-state)
                       #'fluent-predicate-p
                       #'predicate-ignored-p-JAIR-2415)
              (init problem)))
@@ -73,27 +83,64 @@
 @export 'make-abstract-component
 @export '(abstract-component-facts
           abstract-component-components
+          abstract-component-attributes
+          abstract-component-attribute-facts
           abstract-component-seed
           facts
+          attributes
           components
           seed)
 
 @export
 (defstruct abstract-component
+  (problem *problem*)
   (seed nil)
   (facts nil)
-  (components nil))
+  (components nil)
+  (attributes nil)
+  (attribute-facts nil))
+
+(defmethod problem ((ac abstract-component))
+  @inline abstract-component-problem
+  (abstract-component-problem ac))
+(defmethod domain ((ac abstract-component))
+  @inline abstract-component-problem
+  (domain (abstract-component-problem ac)))
 
 (defmethod parameters ((ac abstract-component))
   (abstract-component-components ac))
 (defmethod (setf parameters) (new (ac abstract-component))
   (setf (abstract-component-components ac) new))
 
+(defun print-ac-slot-nonnil (s ac accessor name printer &optional first)
+  (let ((value (funcall accessor ac)))
+    (when value
+      (unless first
+        (pprint-newline :linear s))
+      (funcall printer s ac name value))))
+
+(defun printer1 (s ac name value)
+  (format s "~w " name)
+  (let ((*print-escape* nil))
+    (pprint-logical-block (s value :prefix "(" :suffix ")")
+      (loop
+         (pprint-exit-if-list-exhausted)
+         (let ((f (pprint-pop)))
+           (write (name f) :stream s)
+           (pprint-exit-if-list-exhausted)
+           (write-char #\Space s)
+           (pprint-newline :fill s)))))
+  (write-char #\Space s))
+
+(defun printer2 (s ac name value)
+  (format s "~w ~w " name value))
+
 (defmethod print-object ((ac abstract-component) s)
   (print-unreadable-object (ac s)
-    (format s "~<A-COMP ~;:objs ~w ~_:seed ~w~;~:>"
-            (list (parameters ac)
-                  (abstract-component-seed ac)))))
+    (pprint-logical-block (s nil :prefix "A-COMP ")
+      (print-ac-slot-nonnil s ac #'abstract-component-components :objs #'printer1 t)
+      (print-ac-slot-nonnil s ac #'abstract-component-seed :seed #'printer2)
+      (print-ac-slot-nonnil s ac #'abstract-component-attributes :attrs #'printer1))))
 
 (defun %constants (static-facts)
   (remove-duplicates
@@ -119,6 +166,7 @@
 
 (defun cluster-objects-with-seed
     (seed other-types constants static-facts static-predicates)
+  "static predicates are ungrounded while static facts are grounded."
   (iter
     (with acs = nil)
     (with open = nil)
@@ -152,13 +200,15 @@
                      (remove-if-not
                       (curry (conjoin #'eqname #'predicate-more-specific-p) p)
                       static-facts))
-                (unless (predicates-connect-components p-facts acs)
-                  (setf acs (extend-components p-facts acs))
-                  (iter (for t2 in (remove-duplicates
-                                    (mapcar #'type (parameters p))))
-                        (unless (or (find t2 open)
-                                    (find t2 closed))
-                          (push t2 open))))))
+                (if (predicates-connect-components p-facts acs)
+                    (setf acs (add-attributes p-facts acs))
+                    (progn
+                      (setf acs (extend-components p-facts acs))
+                      (iter (for t2 in (remove-duplicates
+                                        (mapcar #'type (parameters p))))
+                            (unless (or (find t2 open)
+                                        (find t2 closed))
+                              (push t2 open)))))))
     (finally (return acs))))
 
 (defun static-fact-extends-ac-p (f ac)
@@ -180,8 +230,18 @@
                 (unionf fps ps)
                 ps)))
         facts :initial-value ps))
-     (mapcar #'parameters acs)))
+     (mapcar #'abstract-component-components acs)))
   nil)
+
+(defun add-attributes (facts acs)
+  (dolist (f facts)
+    (match (find-if (curry #'static-fact-extends-ac-p f) acs)
+      ((abstract-component (attribute-facts (place facts))
+                           (attributes (place attrs))
+                           components)
+       (push f facts)
+       (unionf attrs (set-difference (parameters f) components)))))
+  acs)
 
 (defun extend-components (facts acs)
   (dolist (f facts)
