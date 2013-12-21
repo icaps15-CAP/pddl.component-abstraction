@@ -3,12 +3,13 @@
 
 @export
 (defstruct abstract-component-task
-  attributes init goal ac)
+  attributes init goal ac problem)
 
 @export '(abstract-component-task-init
           abstract-component-task-goal
           abstract-component-task-attributes
           abstract-component-task-ac
+          abstract-component-task-problem
           make-abstract-component-task)
 
 (defun print-ac-slot (s ac name body)
@@ -42,6 +43,7 @@
 @export
 (defun task (ac *problem*)
   (make-abstract-component-task
+   :problem *problem*
    :ac ac
    :attributes (facts-concerning ac (static-facts *problem*))
    :init (facts-concerning ac (set-difference (init *problem*) (static-facts *problem*)))
