@@ -5,7 +5,8 @@
 (defstruct abstract-component-task
   (problem *problem*) init goal ac)
 
-@export '(ac abstract-component-task-p
+(export '(ac
+          abstract-component-task-p
           abstract-component-task-init
           abstract-component-task-goal
           abstract-component-task-unary-init
@@ -14,7 +15,7 @@
           abstract-component-task-multiary-goal
           abstract-component-task-ac
           abstract-component-task-problem
-          make-abstract-component-task)
+          make-abstract-component-task))
 
 (defmethod problem ((ac abstract-component-task))
   @inline abstract-component-task-problem

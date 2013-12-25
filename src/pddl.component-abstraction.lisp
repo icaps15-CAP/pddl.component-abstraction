@@ -80,16 +80,17 @@
                       )
              (all-instantiated-predicates problem)))
 
-@export 'make-abstract-component
-@export '(abstract-component-facts
-          abstract-component-components
-          abstract-component-attributes
-          abstract-component-attribute-facts
-          abstract-component-seed
-          facts
-          attributes
-          components
-          seed)
+(export
+ '(make-abstract-component
+   abstract-component-facts
+   abstract-component-components
+   abstract-component-attributes
+   abstract-component-attribute-facts
+   abstract-component-seed
+   facts
+   attributes
+   components
+   seed))
 
 @export
 (defstruct abstract-component
