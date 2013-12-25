@@ -25,6 +25,7 @@
      (t method))
    :transitive nil))
 
+@export
 (defun abstract-component-task-strict= (t1 t2)
   (and (abstract-component-task= t1 t2)
        (strictly-task= t1 t2)))
