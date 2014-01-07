@@ -81,6 +81,8 @@
              (some (lambda (p)
                      (let* ((p (curry p cs1 cs2)))
                        (and (every (lambda (c)
+                                     ;; c in component1 has the same type
+                                     ;; as that of corresponding object in cs2
                                      (eq (type c) (type (funcall p c))))
                                    cs1)
                             (every (lambda (f1)
