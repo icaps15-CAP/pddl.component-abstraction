@@ -17,8 +17,11 @@
   :author "Masataro Asai"
   :license ""
   :depends-on (:pddl
+               :eazylazy
                :pddl.plan-optimizer
                :optima
+               :bordeaux-threads
+               :function-cache
                :alexandria
                :guicho-utilities
                :iterate)

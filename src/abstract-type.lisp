@@ -1,6 +1,48 @@
 (in-package :pddl.component-abstraction)
 (cl-syntax:use-syntax :annot)
 
+@export
+(defun lpermutations-of (seq)
+  "returns a lazy-list of sequences.
+   each sequence is a permutation of the original sequence."
+  (etypecase seq
+    (cons (%lpermutations-of-cons seq))))
+
+(defcached %lpermutations-of-cons (seq)
+  (match seq
+    ((list _)
+     (llist seq))
+    ((list* head rest-seq)
+     (let* ((len (length seq))
+            (n (1- len))) ; n -- 2, length -- 3
+       (labels 
+           ((insert (subperm pos)
+              (let (acc (%subperm subperm))
+                (dotimes (i pos)        ; i = 0
+                  (push (car %subperm) acc)
+                  (setf %subperm (cdr %subperm)))
+                (push head acc); pos = 1
+                (dotimes (i (- n pos))  ; 2 - 1 = 1
+                  (push (car %subperm) acc)
+                  (setf %subperm (cdr %subperm)))
+                (nreverse acc)))
+            (forward (subperms pos)
+              (match subperms
+                ((lcons subperm rest)
+                 (if (< pos n)
+                     (lcons (insert subperm pos) (forward subperms (1+ pos)))
+                     (lcons (insert subperm pos) (backward rest pos))))))
+            (backward (subperms pos)
+              (match subperms
+                ((lcons subperm rest)
+                 (if (< 0 pos)
+                     (lcons (insert subperm pos) (backward subperms (1- pos)))
+                     (lcons (insert subperm pos) (forward rest pos)))))))
+         (forward (%lpermutations-of-cons rest-seq) 0))))))
+
+(declaim (ftype (function (fixnum fixnum) list) mappings))
+
+@export
 (defun mappings (from to)
   (assert (<= from to))
   (let (acc)

@@ -6,5 +6,7 @@
 (defpackage pddl.component-abstraction
   (:use :cl :pddl :optima :alexandria :iterate
         :pddl.plan-optimizer
+        :eazylazy
         :guicho-utilities)
+  (:import-from :function-cache :defcached)
   (:shadow :minimize :maximize))
