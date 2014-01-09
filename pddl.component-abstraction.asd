@@ -18,6 +18,7 @@
   :license ""
   :depends-on (:pddl
                :eazylazy
+               :eazylazy.optima
                :pddl.plan-optimizer
                :optima
                :bordeaux-threads

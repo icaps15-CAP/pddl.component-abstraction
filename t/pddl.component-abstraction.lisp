@@ -46,7 +46,7 @@
          (s2 (object *problem* :rover2store))
          (rc2 (pddl-atomic-state :name 'rc :parameters (list c2 r2)))
          (sr2 (pddl-atomic-state :name 'sr :parameters (list s2 r2)))
-         (rw2 (pddl-atomic-state :name 'rw :parameters (list r2 waypoint)))
+         ;;(rw2 (pddl-atomic-state :name 'rw :parameters (list r2 waypoint)))
          (ac2 (make-abstract-component :facts (list sr2) :components (list r2 s2)))
          (ac3 (make-abstract-component :facts (list rc2) :components (list r2 c2)))
          
