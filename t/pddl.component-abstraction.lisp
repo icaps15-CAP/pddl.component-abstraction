@@ -139,5 +139,19 @@
 
   (finishes
     (mapcar (rcurry #'categorize-tasks :loose)
-            (abstract-tasks roverprob03 :rover))))
+            (abstract-tasks roverprob03 :rover)))
+
+
+  ;; regression test : what if :passenger has no static edges??
+  (let ((passenger-type
+         (query-type elevators-sequencedstrips :passenger)))
+    (is (some
+         (lambda (comp-bucket)
+           (every (lambda (comp)
+                    (eq passenger-type
+                        (type (abstract-component-seed comp))))
+                  comp-bucket))
+         (abstract-components-with-seed
+          ELEVATORS-SEQUENCEDSTRIPS-P40_60_1
+          passenger-type)))))
 

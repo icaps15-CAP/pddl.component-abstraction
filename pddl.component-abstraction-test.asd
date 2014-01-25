@@ -15,6 +15,7 @@
                :pddl.instances
                :pddl.instances.cell-assembly-eachparts
                :pddl.instances.rover
+               :pddl.instances.elevators
                :pddl.instances.woodworking-small
                :guicho-utilities
                :repl-utilities
