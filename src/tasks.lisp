@@ -3,6 +3,10 @@
 
 @export
 (defstruct abstract-component-task
+  "A structure for abstract-task.
+ slot ac is the core component.
+ slot init holds the relevant initial state, unrestored.
+ slot goal holds the relevant goal."
   (problem *problem*) init goal ac)
 
 (export '(ac
@@ -107,6 +111,9 @@
 
 @export
 (defun abstract-component-task<= (t1 t2)
+  "defines a relationship between tasks.
+ t1 <= t2 when attributes, inits, goals of t1 are the subset of that of t2.
+ In KEPS paper, these corresponds to "
   (match t1
     ((abstract-component-task
       (init i1) (goal g1)
@@ -128,6 +135,7 @@
 
 @export
 (defun abstract-component-task= (ac-t1 ac-t2)
+  "Same abstract type and same set of attributes, as in KEPS."
   (and (abstract-component-task<= ac-t1 ac-t2)
        (abstract-component-task<= ac-t2 ac-t1)))
 @export
