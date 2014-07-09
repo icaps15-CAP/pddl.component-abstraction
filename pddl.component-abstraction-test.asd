@@ -23,4 +23,6 @@
   :components ((:module "t"
                 :components
                 ((:file "pddl.component-abstraction"))))
-  :perform (load-op :after (op c) (asdf:clear-system c)))
+  :perform (load-op :after (op c) 
+		    (eval (read-from-string "(fiveam:run! :pddl.component-abstraction)"))
+		    (asdf:clear-system c)))
