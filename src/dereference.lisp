@@ -13,6 +13,10 @@
 
 @export
 (defun dereference-abstract-task-bucket (similar-tasks)
+  "For a list of abstract component tasks, take the first one and make its
+static-facts into the predicate. Since the type is explicitly specified,
+the predicate is not identical to those in the domain description and
+should be newly created."
   (match (first (sort similar-tasks #'abstract-component-task>=))
     ((abstract-component-task ac init goal)
      (let* ((*match* nil)
@@ -71,4 +75,3 @@
                                     'parameter-not-found :parameter p)
                             (getf *match* p))
                           parameters)))))
-    
