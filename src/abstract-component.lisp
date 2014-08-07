@@ -7,6 +7,7 @@
 
 (export
  '(make-abstract-component
+   abstract-component
    abstract-component-facts
    abstract-component-components
    abstract-component-attributes

@@ -14,4 +14,7 @@
    :predicates-connect-components
    :static-facts
    :static-predicates
-   :cluster-objects))
+   :cluster-objects
+   :binarize-domain
+   :binarize-problem
+   :binarize))
