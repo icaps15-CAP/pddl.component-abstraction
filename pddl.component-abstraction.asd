@@ -28,10 +28,12 @@
                :iterate)
   :components ((:module "src"
                 :components
-                ((:file "package")
-                 (:file "pddl.component-abstraction")
-                 (:file "abstract-type")
-                 (:file "integrated")
+                ((:file :package)
+                 (:file :static-predicates)
+                 (:file :abstract-component)
+                 (:file :cluster-objects)
+                 (:file :abstract-type)
+                 (:file :integrated)
                  (:file :tasks)
                  (:file :extract-tasks)
                  (:file :dereference))
