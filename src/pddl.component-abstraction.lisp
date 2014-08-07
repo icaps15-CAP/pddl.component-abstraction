@@ -184,10 +184,8 @@
   (format t "~&~2tComponent Abstraction search with seed = ~a" seed)
   (iter
     (with acs = nil)
-    (with open = nil)
     (with closed = nil)
     (with tried-preds = nil)
-    (with ptype = nil) ;; FIXME why did I make it this way?
     (finally (return acs))
     (for remaining = (set-difference other-types closed))
     (format t "~&~4tRemaining: ~a" remaining)
@@ -195,9 +193,8 @@
     (format t "~&~4tEstablished Abstract Components:~{~&~6t~s~}" (or acs '(:nothing)))
     (while remaining)
     (for type first seed then (first remaining))
-    (until (eq type ptype)) ;; FIXME why did I make it this way?
-    (setf ptype type)
-    (iter (initially
+    (iter (with open = nil)
+          (initially
            (push type open)
            (let ((static-objects-of-type
                   (remove-if-not (rcurry #'pddl-typep type) static-objects)))
