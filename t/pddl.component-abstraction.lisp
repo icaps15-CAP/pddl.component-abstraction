@@ -113,11 +113,13 @@
     (is-false (abstract-type< ac3 ac2))
     ))
 
+;; integration tests
 (test :cluster-objects
-  ;; integration tests
+  ;; preparation
   (finishes
     (cluster-objects (static-facts roverprob03)
                      (static-predicates roverprob03)))
+  ;; main function
   (finishes
     (abstract-components roverprob03))
   (finishes
