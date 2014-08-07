@@ -1,13 +1,26 @@
 
 (in-package :pddl.component-abstraction)
-
 (cl-syntax:use-syntax :annot)
 
-@export
+;;; utility function
+
+(defun some-pair (fn list &key key)
+  "assumes a symmetric function."
+  (flet ((key (e) (if key (funcall key e) e)))
+    (iter (for list1 on list)
+          (for (e1 . list2) = list1)
+          (iter (for e2 in list2)
+                (when (funcall fn (key e1) (key e2))
+                  (return-from some-pair
+                    (values t e1 e2)))))))
+
+;; (some-pair (lambda (a b) (= a (* 2 b))) '(4 7 5 1 2 3)) => T, 4, 2
+
+;;; extracting static predicates
+
 (defun all-instantiated-types (problem)
   (remove-duplicates (mapcar #'type (objects problem))))
 
-@export
 (defun all-instantiated-predicates (*problem*)
   (let ((*domain* (domain *problem*)))
     (iter (for pred in (predicates *domain*))
@@ -29,7 +42,6 @@
                 (all-instantiated-types *problem*)))
              (parameters pred)))))))
 
-@export
 (defun fluent-predicate-p (predicate)
   (let ((*domain* (domain predicate)))
     (some (lambda (action)
@@ -39,9 +51,8 @@
                   (some f (remove-if-not n (delete-list action))))))
           (actions *domain*))))
 
-
-@export
 (defun predicate-ignored-p-JAIR-2415 (predicate)
+  "Ignores unary or 0-ary predicates"
   (match predicate
     ((pddl-atomic-state parameters)
      (or (< (length parameters) 2)
@@ -63,14 +74,12 @@
                  (mapcar #'type parameters) :length 2)
                 nil))))))
 
-@export
 (defun static-facts (problem)
   (remove-if (disjoin ;; (rcurry #'typep 'pddl-function-state)
                       #'fluent-predicate-p
                       #'predicate-ignored-p-JAIR-2415)
              (init problem)))
 
-@export
 (defun static-predicates (problem)
   (remove-if (disjoin #'fluent-predicate-p
                       #'predicate-ignored-p-JAIR-2415
@@ -79,6 +88,8 @@
                       ;;         (static-facts problem)))
                       )
              (all-instantiated-predicates problem)))
+
+;;; abstract-component structure definition
 
 (export
  '(make-abstract-component
@@ -92,7 +103,6 @@
    components
    seed))
 
-@export
 (defstruct abstract-component
   (problem *problem*)
   (seed nil)
@@ -143,6 +153,8 @@
       (print-ac-slot-nonnil s ac #'abstract-component-seed :seed #'printer2)
       (print-ac-slot-nonnil s ac #'abstract-component-attributes :attrs #'printer1))))
 
+;;; cluster-objects
+
 (defun %static-objects (static-facts)
   (remove-duplicates
    (mappend #'parameters static-facts)))
@@ -151,7 +163,6 @@
   (remove-duplicates
    (mapcar #'type static-objects)))
 
-@export
 (defun cluster-objects (static-facts
                         static-predicates)
   ;; literally following the formal expression by adi botea
@@ -165,20 +176,23 @@
                   static-objects
                   static-facts static-predicates))))
 
+;;;; cluster-objects-with-seed
+
 (defun cluster-objects-with-seed
     (seed other-types static-objects static-facts static-predicates)
   "static predicates are ungrounded while static facts are grounded."
-  (format t "~& Component Abstraction search with seed = ~a" seed)
+  (format t "~&~2tComponent Abstraction search with seed = ~a" seed)
   (iter
     (with acs = nil)
     (with open = nil)
     (with closed = nil)
     (with tried-preds = nil)
     (with ptype = nil) ;; FIXME why did I make it this way?
+    (finally (return acs))
     (for remaining = (set-difference other-types closed))
-    (format t "~& Remaining: ~a" remaining)
-    (format t "~& Closed: ~a" closed)
-    (format t "~& Established Abstract Components:~{~&  ~s~}" (or acs '(:nothing)))
+    (format t "~&~4tRemaining: ~a" remaining)
+    (format t "~&~4tClosed: ~a" closed)
+    (format t "~&~4tEstablished Abstract Components:~{~&~6t~s~}" (or acs '(:nothing)))
     (while remaining)
     (for type first seed then (first remaining))
     (until (eq type ptype)) ;; FIXME why did I make it this way?
@@ -193,57 +207,36 @@
                          acs))))
           (while open)
           (for t1 = (pop open))
-          (format t "~% Opening : t1 = ~a" t1)
           (push t1 closed)
+          (format t "~%~6tOpening : t1 = ~a" t1)
           (iter (for p in (set-difference
                            (remove-if-not
-                            (lambda (pred)
-                              (find t1 (parameters pred)
-                                    :key #'type))
+                            (lambda (pred) (find t1 (parameters pred) :key #'type))
                             static-predicates)
                            tried-preds))
-                (format t "~% All Predicates Tried ~a" tried-preds)
+                (format t "~%~8tAll predicates tried: ~a" tried-preds)
                 (push p tried-preds)
-                (format t "~% Trying predicate ~a" p)
+                (format t "~%~8tTrying a predicate: ~a" p)
                 (for p-facts =
                      (remove-if-not
                       (curry (conjoin #'eqname #'predicate-more-specific-p) p)
                       static-facts))
-                (format t "~% Facts of predicate ~a:~{~&  ~s~}" p p-facts)
-                (if (predicates-connect-components p-facts acs)
-                    (progn
-                      (format t "~% Facts of predicate ~a:~{~&  ~s~}" p p-facts)
-                      (setf acs (add-attributes p-facts acs)))
-                    (progn
-                      (setf acs (extend-components p-facts acs))
-                      (iter (for t2 in (remove-duplicates
-                                        (mapcar #'type (parameters p))))
-                            (unless (or (find t2 open)
-                                        (find t2 closed))
-                              (push t2 open)))))))
-    (finally (return acs))))
+                (format t "~%~8tFacts of predicate ~a:~{~&~10t~s~}" p p-facts)
+                (multiple-value-bind (connects? ac1 ac2)
+                    (predicates-connect-components p-facts acs)
+                  (if connects?
+                      (progn
+                        (format t "~%~8tAbove facts connects components: ~@{~&~10t~a~^,~}" ac1 ac2)
+                        (setf acs (add-attributes p-facts acs)))
+                      (progn
+                        (format t "~%~8tExtending Components!")
+                        (setf acs (extend-components p-facts acs))
+                        (unionf open (set-difference
+                                      (%all-types (parameters p))
+                                      closed)))))))))
 
 (defun static-fact-extends-ac-p (f ac)
   (intersection (parameters f) (parameters ac)))
-
-@export
-(defun predicates-connect-components (facts acs)
-  (mapl
-   (lambda (list)
-     (destructuring-bind (a . rest) list
-       (when (some (curry #'intersection a) rest)
-         (return-from predicates-connect-components t))))
-   (mapcar
-     (lambda (ps)
-       (reduce
-        (lambda (ps f)
-          (let ((fps (parameters f)))
-            (if (intersection fps ps)
-                (unionf fps ps)
-                ps)))
-        facts :initial-value ps))
-     (mapcar #'abstract-component-components acs)))
-  nil)
 
 (defun add-attributes (facts acs)
   (dolist (f facts)
@@ -268,10 +261,20 @@
              acs))))
   acs)
 
-(defun decomposition-satisfactory-p (high acs)
-  (every
-   (lambda (component)
-     (<= 2 (length (remove-duplicates (mapcar #'type (parameters component)))) high))
-   acs))
+;;;; predicates-connect-components
 
+(define-local-function %add-new-nodes (ac)
+  (iter (with nodes = (abstract-component-components ac))
+        (for f in facts)
+        (let ((fparams (parameters f)))
+          (when (intersection fparams nodes)
+            (unionf nodes fparams)))
+        (finally (return nodes))))
 
+(defun predicates-connect-components (facts acs)
+  "Check if adding new edges results in sharing the node in some pair of
+components"
+  (more-labels () (%add-new-nodes)
+    (some-pair
+     #'intersection acs
+     :key #'%add-new-nodes)))

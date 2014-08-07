@@ -9,4 +9,9 @@
         :eazylazy
         :guicho-utilities)
   (:import-from :function-cache :defcached)
-  (:shadow :minimize :maximize))
+  (:shadow :minimize :maximize)
+  (:export
+   :predicates-connect-components
+   :static-facts
+   :static-predicates
+   :cluster-objects))
