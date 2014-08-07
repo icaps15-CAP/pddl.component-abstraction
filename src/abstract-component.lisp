@@ -63,7 +63,10 @@
 
 (defmethod print-object ((ac abstract-component) s)
   (print-unreadable-object (ac s)
-    (pprint-logical-block (s nil :prefix "A-COMP ")
-      (print-ac-slot-nonnil s ac #'abstract-component-components :objs #'printer1 t)
-      (print-ac-slot-nonnil s ac #'abstract-component-seed :seed #'printer2)
-      (print-ac-slot-nonnil s ac #'abstract-component-attributes :attrs #'printer1))))
+    (match ac
+      ((abstract-component components seed attributes)
+       (let ((*print-escape* t))
+         (format s "~<A-COMP ~;~@{~w ~w~^ ~:_~}~:>"
+                 (list :objs (mapcar #'name components)
+                       :seed (name seed)
+                       :attrs (mapcar #'name attributes))))))))
