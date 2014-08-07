@@ -2,7 +2,7 @@
 (cl-syntax:use-syntax :annot)
 
 @export
-(defstruct abstract-component-task
+(defstruct (abstract-component-task (:predicate abstract-component-task-p))
   "A structure for abstract-task.
  slot ac is the core component.
  slot init holds the relevant initial state, unrestored.
@@ -56,41 +56,26 @@
    #'unary-p
    (abstract-component-task-init ac)))
 
-(defun print-ac-task-slot (s ac-task name body)
-  (format s "~w " name)
-  (let ((*print-escape* nil)
-        (*print-length* 5)
-        (ac (abstract-component-task-ac ac-task)))
-    (pprint-logical-block (s body :prefix "(" :suffix ")")
-      (loop
-         (pprint-exit-if-list-exhausted)
-         (let ((f (pprint-pop)))
-           (format s "~a"
-                   (match f
-                     ((pddl-function-state name parameters value)
-                      (list* name
-                             value
-                             (mapcar #'name 
-                                     (set-difference parameters
-                                                     (parameters ac)))))
-                     ((pddl-predicate name parameters)
-                      (cons name
-                            (mapcar #'name 
-                                    (set-difference parameters
-                                                    (parameters ac)))))))
-           (pprint-exit-if-list-exhausted)
-           (write-char #\Space s)
-           (pprint-newline :fill s))))))
+(defun visible-elements (components f)
+  (match f
+    ((pddl-function-state name parameters value)
+     (list* name value (mapcar #'name (set-difference parameters components))))
+    ((pddl-predicate name parameters)
+     (list* name (mapcar #'name (set-difference parameters components))))))
 
 (defmethod print-object ((ac-task abstract-component-task) s)
-  (print-unreadable-object (ac-task s :type t)
-    (pprint-logical-block (s nil)
-      (format s "~w ~w " :ac (abstract-component-task-ac ac-task))
-      (print-ac-slot-nonnil s ac-task #'abstract-component-task-multiary-init :init #'print-ac-task-slot)
-      (print-ac-slot-nonnil s ac-task #'abstract-component-task-multiary-goal :goal #'print-ac-task-slot)
-      (print-ac-slot-nonnil s ac-task #'abstract-component-task-unary-init :unary-init #'print-ac-task-slot)
-      (print-ac-slot-nonnil s ac-task #'abstract-component-task-unary-goal :unary-goal #'print-ac-task-slot)
-      )))
+  (print-unreadable-object (ac-task s)
+    (match ac-task
+      ((abstract-component-task- (ac (and ac (abstract-component components)))
+                                 multiary-init multiary-goal
+                                 unary-init unary-goal)
+       (let ((*print-escape* t))
+         (format s "~<A-TASK ~;~@{~w ~w~^ ~:_~}~:>"
+                 (list :ac ac
+                       :init (mapcar (curry #'visible-elements components) multiary-init)
+                       :goal (mapcar (curry #'visible-elements components) multiary-goal)
+                       :init (mapcar (curry #'visible-elements components) unary-init)
+                       :goal (mapcar (curry #'visible-elements components) unary-goal))))))))
 
 @export
 (defun facts-concerning (ac facts)
