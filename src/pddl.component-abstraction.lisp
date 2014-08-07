@@ -168,20 +168,20 @@
 (defun cluster-objects-with-seed
     (seed other-types static-objects static-facts static-predicates)
   "static predicates are ungrounded while static facts are grounded."
+  (format t "~& Component Abstraction search with seed = ~a" seed)
   (iter
     (with acs = nil)
     (with open = nil)
     (with closed = nil)
     (with tried-preds = nil)
-    (with ptype = nil)
-    (initially
-     (format t "~& initializing component abstraction search with seed = ~a" seed))
+    (with ptype = nil) ;; FIXME why did I make it this way?
     (for remaining = (set-difference other-types closed))
     (format t "~& Remaining: ~a" remaining)
     (format t "~& Closed: ~a" closed)
+    (format t "~& Established Abstract Components:~{~&  ~s~}" (or acs '(:nothing)))
     (while remaining)
     (for type first seed then (first remaining))
-    (until (eq type ptype))
+    (until (eq type ptype)) ;; FIXME why did I make it this way?
     (setf ptype type)
     (iter (initially
            (push type open)
@@ -193,22 +193,27 @@
                          acs))))
           (while open)
           (for t1 = (pop open))
-          (format t "~% opening : t1 = ~a" t1)
+          (format t "~% Opening : t1 = ~a" t1)
           (push t1 closed)
           (iter (for p in (set-difference
                            (remove-if-not
                             (lambda (pred)
-                              (some (rcurry #'pddl-typep t1)
-                                    (parameters pred)))
+                              (find t1 (parameters pred)
+                                    :key #'type))
                             static-predicates)
                            tried-preds))
+                (format t "~% All Predicates Tried ~a" tried-preds)
                 (push p tried-preds)
+                (format t "~% Trying predicate ~a" p)
                 (for p-facts =
                      (remove-if-not
                       (curry (conjoin #'eqname #'predicate-more-specific-p) p)
                       static-facts))
+                (format t "~% Facts of predicate ~a:~{~&  ~s~}" p p-facts)
                 (if (predicates-connect-components p-facts acs)
-                    (setf acs (add-attributes p-facts acs))
+                    (progn
+                      (format t "~% Facts of predicate ~a:~{~&  ~s~}" p p-facts)
+                      (setf acs (add-attributes p-facts acs)))
                     (progn
                       (setf acs (extend-components p-facts acs))
                       (iter (for t2 in (remove-duplicates
