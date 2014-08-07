@@ -11,20 +11,20 @@
 (defun abstract-components-with-seed (*problem* seed-type)
   (categorize-by-equality
    (let* ((sfs (static-facts *problem*))
-          (constants (%constants sfs))
-          (non-constants
-           (set-difference (objects *problem*) constants)))
+          (static-objects (%static-objects sfs))
+          (fluent-objects
+           (set-difference (objects *problem*) static-objects)))
      (concatenate
       'vector
       (map 'vector
        (lambda (o)
          (make-abstract-component :components (list o)
                                   :seed o))
-       non-constants)
+       fluent-objects)
       (cluster-objects-with-seed
        (query-type (domain *problem*) seed-type)
-       (remove seed-type (%all-types constants))
-       constants
+       (remove seed-type (%all-types static-objects))
+       static-objects
        sfs
        (static-predicates *problem*))))
    #'abstract-type= :transitive nil))

@@ -143,13 +143,13 @@
       (print-ac-slot-nonnil s ac #'abstract-component-seed :seed #'printer2)
       (print-ac-slot-nonnil s ac #'abstract-component-attributes :attrs #'printer1))))
 
-(defun %constants (static-facts)
+(defun %static-objects (static-facts)
   (remove-duplicates
    (mappend #'parameters static-facts)))
 
-(defun %all-types (constants)
+(defun %all-types (static-objects)
   (remove-duplicates
-   (mapcar #'type constants)))
+   (mapcar #'type static-objects)))
 
 @export
 (defun cluster-objects (static-facts
@@ -157,16 +157,16 @@
   ;; literally following the formal expression by adi botea
   ;; 全部の順番からやってみて、ダメだったら最初からやり直しというアルゴリズム
   ;; greedy hill-climbingか
-  (iter (with constants = (%constants static-facts))
-        (for all-types on (%all-types constants))
+  (iter (with static-objects = (%static-objects static-facts))
+        (for all-types on (%all-types static-objects))
         (collect (cluster-objects-with-seed
                   (car all-types)
                   (cdr all-types)
-                  constants
+                  static-objects
                   static-facts static-predicates))))
 
 (defun cluster-objects-with-seed
-    (seed other-types constants static-facts static-predicates)
+    (seed other-types static-objects static-facts static-predicates)
   "static predicates are ungrounded while static facts are grounded."
   (iter
     (with acs = nil)
@@ -183,12 +183,15 @@
     (for type first seed then (first remaining))
     (until (eq type ptype))
     (setf ptype type)
-    (push type open)
-    (let ((constants-of-type (remove-if-not (rcurry #'pddl-typep type) constants)))
-      (iter (for o in constants-of-type)
-            (push (make-abstract-component :components (list o)
-                                           :seed o) acs)))
-    (iter (while open)
+    (iter (initially
+           (push type open)
+           (let ((static-objects-of-type
+                  (remove-if-not (rcurry #'pddl-typep type) static-objects)))
+             (iter (for o in static-objects-of-type)
+                   (push (make-abstract-component :components (list o)
+                                                  :seed o)
+                         acs))))
+          (while open)
           (for t1 = (pop open))
           (format t "~% opening : t1 = ~a" t1)
           (push t1 closed)
