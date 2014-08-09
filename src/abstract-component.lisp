@@ -67,6 +67,6 @@
       ((abstract-component components seed attributes)
        (let ((*print-escape* t))
          (format s "~<A-COMP ~;~@{~w ~w~^ ~:_~}~:>"
-                 (list :objs (mapcar #'name components)
-                       :seed (name seed)
-                       :attrs (mapcar #'name attributes))))))))
+                 (append (list :objs (mapcar #'name components))
+                         (when seed (list :seed (name seed)))
+                         (list :attrs (mapcar #'name attributes)))))))))
