@@ -139,9 +139,9 @@
   (finishes
     (abstract-tasks roverprob03 :rover))
 
-  (finishes
-    (mapcar (rcurry #'categorize-tasks :loose)
-            (abstract-tasks roverprob03 :rover)))
+  ;; (finishes
+  ;;   (mapcar (rcurry #'categorize-tasks :loose)
+  ;;           (abstract-tasks roverprob03 :rover)))
 
 
   ;; regression test : what if :passenger has no static edges??
