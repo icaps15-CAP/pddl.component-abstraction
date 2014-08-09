@@ -12,13 +12,7 @@
   :author "Masataro Asai"
   :license ""
   :depends-on (:pddl.component-abstraction
-               :pddl.instances
-               :pddl.instances.cell-assembly-eachparts
-               :pddl.instances.rover
-               :pddl.instances.elevators
-               :pddl.instances.woodworking-small
                :guicho-utilities
-               :repl-utilities
                :fiveam)
   :components ((:module "t"
                 :components

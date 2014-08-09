@@ -8,17 +8,37 @@
   (:use :cl
         :pddl
         :pddl.component-abstraction
-        :pddl.instances
-        :repl-utilities
         :guicho-utilities
         :alexandria
         :iterate
         :fiveam)
-  (:shadow :minimize :maximize))
+  (:shadowing-import-from :pddl :minimize :maximize))
 (in-package :pddl.component-abstraction-test)
 
 (def-suite :pddl.component-abstraction)
 (in-suite :pddl.component-abstraction)
+
+(let ((*default-pathname-defaults*
+       (asdf:system-relative-pathname
+        :pddl.component-abstraction-test "t/")))
+  (mapc (lambda (list)
+          (destructuring-bind (dir pddl) list
+            (handler-bind ((warning #'muffle-warning))
+              (let ((path (merge-pathnames (format nil "~A/~A" dir pddl))))
+                (print path)
+                (multiple-value-bind (name val) (parse-file path)
+                  (print name)
+                  (print val)
+                  (print (symbol-value name)))))))
+        '(("cell-assembly-each" "domain.pddl")
+          ("cell-assembly-each" "p0002.pddl")
+          ("elevators" "domain.pddl")
+          ("elevators" "p20.pddl")
+          ("rover" "domain.pddl")
+          ("rover" "p03.pddl")
+          ("rover" "p10.pddl")
+          ("woodworking" "domain.pddl")
+          ("woodworking" "p01.pddl"))))
 
 (test :predicate-connects-components
   (let* ((*domain* rover)
