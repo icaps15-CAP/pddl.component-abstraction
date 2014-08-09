@@ -95,7 +95,7 @@
             (push t1 closed)
             (format t "~%~6tOpening : t1 = ~a" t1)
             (iter (for p in (%untried-predicates t1))
-                  (format t "~%~8tAll predicates tried: ~a" tried-preds)
+                  (format t "~%~8tAll predicates tried: ~a" (mapcar #'name tried-preds))
                   (push p tried-preds)
                   (format t "~%~8tTrying a predicate: ~a" p)
                   (for p-facts = (%facts-instantiating p))
