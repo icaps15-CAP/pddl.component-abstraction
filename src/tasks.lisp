@@ -91,7 +91,7 @@
    :problem *problem*
    :ac ac
    :init (facts-concerning ac (set-difference (init *problem*) (static-facts *problem*)))
-   :goal (facts-concerning ac (positive-predicates (goal *problem*)))))
+   :goal (facts-concerning ac (positive-goals *problem*))))
 
 (defun facts-subsetp (fs1 fs2 comp1 comp2 attr1 attr2)
   (and (<= (length fs1) (length fs2))
