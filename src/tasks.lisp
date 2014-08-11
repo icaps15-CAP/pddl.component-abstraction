@@ -63,6 +63,10 @@
     ((pddl-predicate name parameters)
      (list* name (mapcar #'name (set-difference parameters components))))))
 
+(defun elements-to-show (keyword things components)
+  (when things
+    (list keyword (mapcar (curry #'visible-elements components) things))))
+
 (defmethod print-object ((ac-task abstract-component-task) s)
   (print-unreadable-object (ac-task s)
     (match ac-task
@@ -71,11 +75,11 @@
                                  unary-init unary-goal)
        (let ((*print-escape* t))
          (format s "~<A-TASK ~;~@{~w ~w~^ ~:_~}~:>"
-                 (list :ac ac
-                       :init (mapcar (curry #'visible-elements components) multiary-init)
-                       :goal (mapcar (curry #'visible-elements components) multiary-goal)
-                       :init (mapcar (curry #'visible-elements components) unary-init)
-                       :goal (mapcar (curry #'visible-elements components) unary-goal))))))))
+                 `(:ac ,ac
+                       ,@(elements-to-show :init multiary-init components)
+                       ,@(elements-to-show :goal multiary-goal components)
+                       ,@(elements-to-show :unary-init unary-init components)
+                       ,@(elements-to-show :unary-goal unary-goal components))))))))
 
 
 (defun facts-concerning (ac facts)
