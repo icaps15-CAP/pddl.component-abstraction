@@ -11,7 +11,6 @@
 (define-condition parameter-not-found (condition)
   ((parameter :initarg :parameter)))
 
-@export
 (defun dereference-abstract-task-bucket (similar-tasks)
   "For a list of abstract component tasks, take the first one and make its
 static-facts into the predicate. Since the type is explicitly specified,

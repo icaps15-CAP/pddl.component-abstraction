@@ -16,4 +16,5 @@
    :cluster-objects
    :binarize-domain
    :binarize-problem
-   :binarize))
+   :binarize
+   :dereference-abstract-task-bucket))
