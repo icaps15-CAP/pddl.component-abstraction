@@ -61,10 +61,10 @@
       (predicates-connect-components p-facts acs)
     (if connects?
         (progn
-          (format t "~%~8tAbove facts connects components: ~@{~&~10t~a~^,~}" ac1 ac2)
+          (format t ": Fail")
           (values (add-attributes p-facts acs) open))
         (progn
-          (format t "~%~8tExtention Successful!")
+          (format t ": Success")
           (values (extend-components p-facts acs)
                   (union open (set-difference (%all-types (parameters p)) closed)))))))
 
@@ -79,9 +79,9 @@
       (with tried-preds = nil)
       (finally (return acs))
       (for remaining = (set-difference other-types closed))
-      (format t "~&~4tRemaining: ~a" remaining)
-      (format t "~&~4tClosed: ~a" closed)
-      (format t "~&~4tEstablished Abstract Components:~&~6t~w" (or acs '(:nothing)))
+      (format t "~&~4tRemaining: ~a" (mapcar #'name remaining))
+      (format t "~&~4tClosed: ~a" (mapcar #'name closed))
+      (format t "~&~4t~a Established Abstract Components" (length acs))
       (while remaining)
       (for type first seed then (first remaining))
       (more-labels () (%facts-instantiating
@@ -96,13 +96,13 @@
               (push t1 closed)
               (format t "~%~6tOpening : t1 = ~a" t1)
               (iter (for p in (%untried-predicates t1))
-                    (format t "~%~8tAll predicates tried: ~a" (mapcar #'name tried-preds))
                     (push p tried-preds)
-                    (format t "~%~8tTrying a predicate: ~a" p)
                     (for p-facts = (%facts-instantiating p))
-                    (format t "~%~8tFacts of predicate ~a:~&~10t~w" p p-facts)
-                    (multiple-value-setq (acs open)
-                      (%update-components p p-facts open))))))))
+                    (when p-facts
+                      ;;(format t "~%~8tAll predicates tried: ~a" (mapcar #'name tried-preds))
+                      (format t "~%~8tExtend: ~a facts / ~a" (length p-facts) p)
+                      (multiple-value-setq (acs open)
+                        (%update-components p p-facts open)))))))))
 
 (defun static-fact-extends-ac-p (f ac)
   (intersection (parameters f) (parameters ac)))

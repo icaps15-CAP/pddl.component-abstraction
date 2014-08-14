@@ -24,8 +24,9 @@ goals)"
                  ac-sets)))
     (unless (= 1 (length result))
       (let ((*print-length* 4) (*print-escape* t))
-        (warn "Components from the same seed w/ different abstract-type!~&~a"
-              (mapcar (lambda (bucket) (list* :length (length bucket) :examples bucket)) result))))
+        (warn "Components from the same seed w/ different abstract-type!"
+              ;; (mapcar (lambda (bucket) (list* :length (length bucket) :examples bucket)) result)
+              )))
     (flatten result)))
 
 
