@@ -33,6 +33,7 @@
                  (:file :cluster-objects)
                  (:file :abstract-type)
                  (:file :integrated)
+                 (:file :for-component-planner)
                  (:file :tasks)
                  (:file :extract-tasks)
                  (:file :dereference))
