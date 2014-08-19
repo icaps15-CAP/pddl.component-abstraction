@@ -59,6 +59,7 @@
 (define-local-function %update-components (p p-facts open)
   (multiple-value-bind (connects? ac1 ac2)
       (predicates-connect-components p-facts acs)
+    (declare (ignore ac1 ac2)) ;; these might be useful again while debugging
     (if connects?
         (progn
           (format t ": Fail")
