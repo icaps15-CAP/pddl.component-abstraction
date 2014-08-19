@@ -30,35 +30,24 @@
 
 (defun fluent-predicate-p (predicate)
   (let ((*domain* (domain predicate)))
-    (some (lambda (action)
-            (let ((f (curry #'predicate-more-specific-p predicate))
-                  (n (curry #'eqname predicate)))
-              (or (some f (remove-if-not n (add-list action)))
-                  (some f (remove-if-not n (delete-list action))))))
-          (actions *domain*))))
+    (flet ((match (effect)
+             (and (eqname predicate effect)
+                  (predicate-more-specific-p predicate effect))))
+      (some (lambda (action)
+              (or (some #'match (add-list action))
+                  (some #'match (delete-list action))))
+            (actions *domain*)))))
 
 (defun predicate-ignored-p-JAIR-2415 (predicate)
   "Ignores unary or 0-ary predicates"
   (match predicate
     ((pddl-atomic-state parameters)
      (or (< (length parameters) 2)
-         (block comb
-           (map-combinations
-            (lambda (list)
-              (when (apply #'eq list)
-                (return-from comb t)))
-            (mapcar #'type parameters) :length 2)
-           nil)))
+         (some-pair #'eq (mapcar #'type parameters))))
     ((pddl-function-state parameters)
      (or (< (length parameters) 1)
          (and (<= 2 (length parameters))
-              (block comb
-                (map-combinations
-                 (lambda (list)
-                   (when (apply #'eq list)
-                     (return-from comb t)))
-                 (mapcar #'type parameters) :length 2)
-                nil))))))
+              (some-pair #'eq (mapcar #'type parameters)))))))
 
 (defun static-facts (problem)
   (remove-if (disjoin ;; (rcurry #'typep 'pddl-function-state)
