@@ -1,10 +1,19 @@
 (in-package :pddl.component-abstraction)
 
+;; Avoid calling abstract-task= by assuming there are only the components
+;; with the same seed types.
+
+(defun abstract-tasks-seed-only (*problem* type) 
+  "problem, pddl-type -> (list a-task) For each task, the core component is
+grown from the given seed type.  However, it does not guarantee the task
+eqality (because they might have the different sets of attibutes, init and
+goals)"
+  (mapcar (lambda (ac) (task ac *problem*))
+          (reduce #'append (abstract-components-seed-only *problem* type))))
+
 (defun abstract-components-seed-only (*problem* seed-type)
   (let* ((sfs (static-facts *problem*))
          (static-objects (%static-objects sfs))
-         (fluent-objects
-          (set-difference (objects *problem*) static-objects))
          (acs
           (cluster-objects-seed-only
            (query-type (domain *problem*) seed-type)
@@ -12,8 +21,8 @@
            static-objects
            sfs
            (static-predicates *problem*))))
-    (format t "~&~a abstract components, including junks" (length acs))
-    (categorize-by-equality acs #'has-same-number-of-attributes :transitive nil)))
+    (format t "~&~a abstract components, no junks (seed only)" (length acs))
+    (categorize-by-equality acs #'abstract-type=/fast :transitive nil)))
 
 (defun cluster-objects-seed-only
     (seed other-types static-objects static-facts static-predicates)
@@ -44,6 +53,62 @@
                       (format t "~%~8tExtend: ~a facts / ~a" (length p-facts) p)
                       (multiple-value-setq (acs open)
                         (%update-components p p-facts open))))))
-      (format t "~&~4tClosed: ~a" (mapcar #'name closed))
       (format t "~&~4t~a Established Abstract Components" (length acs))
       acs)))
+
+
+(defun abstract-type=/fast (ac1 ac2)
+  "Returns true when the structure of ac1 is a subgraph of that of ac2.
+Follow the description in macroff-JAIR05.
+Do not run the brute force search -- choose wisely."
+  (match ac1
+    ((abstract-component (facts fs1) (components cs1))
+     (match ac2
+       ((abstract-component (facts fs2) (components cs2))
+        (and (= (length cs1) (length cs2))
+             (= (length fs1) (length fs2))
+             (%choose-object nil nil nil nil fs1 fs2 cs1 cs2)))))))
+
+(defun same-pos-if-appear (o1 o2 f1 f2)
+  (eq (position o1 (parameters f1))
+      (position o2 (parameters f2)))) 
+
+;;;; imperative version
+;; (defun %choose (fs1 fs2 cs1 cs2)
+;;   )
+
+;;;; recursive version
+(defun %choose-object (os1 os2 checked1 checked2 unknown1 unknown2 cs1 cs2)
+  (if (null cs1) ; (and (null cs2))
+      t
+      (iter outer
+            (for o1 in cs1)
+            (iter (for o2 in cs2)
+                  (in outer
+                      (thereis
+                       (and (eq (type o1) (type o2))
+                            (every (curry #'same-pos-if-appear o1 o2) checked1 checked2)
+                            (%choose-fact (cons o1 os1) (cons o2 os2)
+                                          checked1 checked2
+                                          unknown1 unknown2
+                                          (remove o1 cs1)
+                                          (remove o2 cs2)))))))))
+
+(defun %choose-fact (os1 os2 checked1 checked2 unknown1 unknown2 cs1 cs2)
+  (or (iter outer
+            (for f1 in unknown1)
+            (iter (for f2 in unknown2)
+                  (in outer
+                      (thereis
+                       (and (eqname f1 f2)
+                            (every (rcurry #'same-pos-if-appear f1 f2) os1 os2)
+                            (%choose-fact os1 os2
+                                          (cons f1 checked1)
+                                          (cons f2 checked2)
+                                          (remove f1 unknown1)
+                                          (remove f2 unknown2)
+                                          cs1 cs2))))))
+      (%choose-object os1 os2 checked1 checked2 unknown1 unknown2 cs1 cs2)))
+
+
+

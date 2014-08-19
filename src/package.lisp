@@ -17,4 +17,8 @@
    :binarize-domain
    :binarize-problem
    :binarize
-   :dereference-abstract-task-bucket))
+   :dereference-abstract-task-bucket
+   :abstract-type=/fast
+   :abstract-components-seed-only
+   :abstract-tasks-seed-only
+   :pick-those-from-seed-type))

@@ -110,6 +110,7 @@
               (list rw0 rw1) ac))
 
     (is-true (abstract-type= ac0 ac1))
+    (is-true (abstract-type=/fast ac0 ac1))
     (is-true (abstract-type<= ac0 ac1))
     (is-true (abstract-type<= ac1 ac0))
     (is-true (abstract-type<=> ac1 ac0))
@@ -118,6 +119,7 @@
 
     ;; after the addition, ac0 > ac2
     (is-false (abstract-type= ac0 ac2))
+    (is-false (abstract-type=/fast ac0 ac2))
     (is-true (abstract-type<= ac2 ac0))
     (is-false (abstract-type<= ac0 ac2))
     (is-true (abstract-type<=> ac2 ac0))
@@ -126,6 +128,7 @@
 
 
     (is-false (abstract-type= ac3 ac2))
+    (is-false (abstract-type=/fast ac3 ac2))
     (is-false (abstract-type<= ac3 ac2))
     (is-false (abstract-type<= ac2 ac3))
     (is-false (abstract-type<=> ac2 ac3))
