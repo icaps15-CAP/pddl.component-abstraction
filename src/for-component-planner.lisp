@@ -24,6 +24,19 @@ goals)"
     (format t "~&~a abstract components, no junks (seed only)" (length acs))
     (categorize-by-equality acs #'abstract-type=/fast :transitive nil)))
 
+(define-local-function %update-components* (p p-facts open)
+  (multiple-value-bind (connects? ac1 ac2)
+      (predicates-connect-components p-facts acs)
+    (declare (ignore ac1 ac2)) ;; these might be useful again while debugging
+    (if connects?
+        (progn
+          (format t ": Fail")
+          (values (add-attributes* p-facts acs) open))
+        (progn
+          (format t ": Success")
+          (values (extend-components* p-facts acs)
+                  (union open (set-difference (%all-types (parameters p)) closed)))))))
+
 (defun cluster-objects-seed-only
     (seed other-types static-objects static-facts static-predicates)
   "static predicates are ungrounded while static facts are grounded."
@@ -37,7 +50,7 @@ goals)"
       (more-labels () (%facts-instantiating
                        %collect-seed-components
                        %untried-predicates
-                       %update-components)
+                       %update-components*)
         (iter (with open = nil)
               (initially (push type open)
                          (%collect-seed-components type))
@@ -52,18 +65,37 @@ goals)"
                       ;;(format t "~%~8tAll predicates tried: ~a" (mapcar #'name tried-preds))
                       (format t "~%~8tExtend: ~a facts / ~a" (length p-facts) p)
                       (multiple-value-setq (acs open)
-                        (%update-components p p-facts open))))))
+                        (%update-components* p p-facts open))))))
       (format t "~&~4t~a Established Abstract Components" (length acs))
       acs)))
 
+(defun add-attributes* (facts acs)
+  (dolist (f facts)
+    (ematch (find-if (curry #'static-fact-extends-ac-p f) acs)
+      ((abstract-component (attribute-facts (place facts))
+                           (attributes (place attrs))
+                           components)
+       (push f facts)
+       (unionf attrs (set-difference (parameters f) components)))
+      (nil nil)))
+  acs)
+
+(defun extend-components* (facts acs)
+  (dolist (f facts)
+    (ematch (find-if (curry #'static-fact-extends-ac-p f) acs)
+      ((abstract-component (facts (place facts)) (components (place components)))
+       (push f facts)
+       (unionf components (parameters f)))
+      (nil nil)))
+  acs)
 
 (defun abstract-type=/fast (ac1 ac2)
   "Returns true when the structure of ac1 is a subgraph of that of ac2.
 Follow the description in macroff-JAIR05.
 Do not run the brute force search -- choose wisely."
-  (match ac1
+  (ematch ac1
     ((abstract-component (facts fs1) (components cs1))
-     (match ac2
+     (ematch ac2
        ((abstract-component (facts fs2) (components cs2))
         (and (= (length cs1) (length cs2))
              (= (length fs1) (length fs2))
