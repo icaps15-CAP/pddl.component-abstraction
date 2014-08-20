@@ -35,7 +35,9 @@ goals)"
         (progn
           (format t ": Success")
           (values (extend-components* p-facts acs)
-                  (union open (set-difference (%all-types (parameters p)) closed)))))))
+                  (union open (set-difference
+                               (%all-types (parameters p))
+                               closed)))))))
 
 (defun cluster-objects-seed-only
     (seed other-types static-objects static-facts static-predicates)
