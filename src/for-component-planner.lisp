@@ -44,32 +44,40 @@ goals)"
   "static predicates are ungrounded while static facts are grounded."
   (declare (ignorable other-types))
   (format t "~&~2tComponent Abstraction search with seed = ~a" seed)
-  (let ((*print-length* 5))
-    (let* ((acs nil)
-           (closed nil)
-           (tried-preds nil)
-           (type seed))
-      (more-labels () (%facts-instantiating
-                       %collect-seed-components
-                       %untried-predicates
-                       %update-components*)
-        (iter (with open = nil)
-              (initially (push type open)
-                         (%collect-seed-components type))
-              (while open)
-              (for t1 = (pop open))
-              (push t1 closed)
-              (format t "~%~6tOpening : t1 = ~a" t1)
-              (iter (for p in (%untried-predicates t1))
-                    (push p tried-preds)
-                    (for p-facts = (%facts-instantiating p))
-                    (when p-facts
-                      ;;(format t "~%~8tAll predicates tried: ~a" (mapcar #'name tried-preds))
-                      (format t "~%~8tExtend: ~a facts / ~a" (length p-facts) p)
-                      (multiple-value-setq (acs open)
-                        (%update-components* p p-facts open))))))
-      (format t "~&~4t~a Established Abstract Components" (length acs))
-      acs)))
+  (let* ((acs nil)
+         (closed nil)
+         (tried-preds nil)
+         (type seed))
+    (more-labels () (%facts-instantiating
+                     %collect-seed-components
+                     %untried-predicates
+                     %update-components*)
+      (iter (with open = nil)
+            (initially (push type open)
+                       (%collect-seed-components type))
+            (while open)
+            (for t1 = (pop open))
+            (format t "~%~6tOpening : t1 = ~a" t1)
+            (when-let ((t2 (prog1 (find-if (curry #'pddl-supertype-p t1)
+                                           closed)
+                             (push t1 closed))))
+              (format t "~%~6tSupertype t2 = ~a is already checked." t2)
+              (next-iteration))
+            (iter (for p in (%untried-predicates t1))
+                  (push p tried-preds)
+                  (for p-facts = (%facts-instantiating p))
+                  (when p-facts
+                    ;(format t "~%~8tAll predicates tried: ~a" tried-preds)
+                    (format t "~%~8tExtend: ~a facts / ~a -> ~a"
+                            (length p-facts) (name t1) p)
+                    ;; (format t "~%~8tFacts: ~a" p-facts)
+                    (multiple-value-setq (acs open)
+                      (%update-components* p p-facts open))))))
+    (format t "~&~4t~a Established Abstract Components" (length acs))
+    (format t "~&~4tof which there are ~a objects"
+            (mapcar (compose #'length
+                             #'abstract-component-components) acs))
+    acs))
 
 (defun add-attributes* (facts acs)
   (dolist (f facts)
@@ -82,14 +90,25 @@ goals)"
       (nil nil)))
   acs)
 
-(defun extend-components* (facts acs)
-  (dolist (f facts)
-    (ematch (find-if (curry #'static-fact-extends-ac-p f) acs)
-      ((abstract-component (facts (place facts)) (components (place components)))
-       (push f facts)
-       (unionf components (parameters f)))
-      (nil nil)))
-  acs)
+(defun static-fact-extends-ac-p* (f ac)
+  "Returns true only when the extension is from the node that is already
+added in the component"
+  (intersection (parameters f) (parameters ac)))
+
+(defun extend-components* (new-facts acs)
+  (dolist (ac acs acs)
+    (ematch ac
+      ((abstract-component
+        (facts (place facts))
+        (components (place components)))
+       (let ((extenders
+              (remove-if-not (rcurry #'static-fact-extends-ac-p* ac)
+                               new-facts)))
+         ;;(format t "~&facts:~a~&c :~a" extenders ac)
+         (appendf facts extenders)
+         (unionf components
+                 (reduce #'union (mapcar #'parameters extenders)
+                         :initial-value nil)))))))
 
 (defun abstract-type=/fast (ac1 ac2)
   "Returns true when the structure of ac1 is a subgraph of that of ac2.
