@@ -13,12 +13,13 @@ goals)"
 
 (defun abstract-components-seed-only (*problem* seed-type)
   (let* ((sfs (static-facts *problem*))
-         (static-objects (%static-objects sfs))
+         (objects (objects *problem*))
+         (seed-type (query-type (domain *problem*) seed-type))
          (acs
           (cluster-objects-seed-only
-           (query-type (domain *problem*) seed-type)
-           (remove seed-type (%all-types static-objects))
-           static-objects
+           seed-type
+           (remove seed-type (%all-types objects))
+           objects
            sfs
            (static-predicates *problem*))))
     (format t "~&~a abstract components, no junks (seed only)" (length acs))
