@@ -23,7 +23,7 @@ goals)"
            sfs
            (static-predicates *problem*))))
     (format t "~&~a abstract components, no junks (seed only)" (length acs))
-    (categorize-by-equality acs #'abstract-type=/fast :transitive nil)))
+    (categorize-by-equality acs #'abstract-type=/fast :transitive t)))
 
 (define-local-function %update-components* (p p-facts open)
   (multiple-value-bind (connects? ac1 ac2)

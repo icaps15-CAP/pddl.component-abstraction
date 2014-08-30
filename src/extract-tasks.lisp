@@ -34,5 +34,5 @@ goals)"
 (defun categorize-tasks (tasks &optional method)
   @ignore method
   (categorize-by-equality
-   tasks #'abstract-component-task= :transitive nil))
+   tasks #'abstract-component-task= :transitive t))
 
