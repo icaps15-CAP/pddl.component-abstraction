@@ -9,7 +9,8 @@ grown from the given seed type.  However, it does not guarantee the task
 eqality (because they might have the different sets of attibutes, init and
 goals)"
   (mapcar (lambda (ac) (task ac *problem*))
-          (reduce #'append (abstract-components-seed-only *problem* type))))
+          (reduce #'append (abstract-components-seed-only *problem* type)
+                  :from-end t)))
 
 (defun abstract-components-seed-only (*problem* seed-type)
   (let* ((sfs (static-facts *problem*))
@@ -23,6 +24,7 @@ goals)"
            sfs
            (static-predicates *problem*))))
     (format t "~&~a abstract components, no junks (seed only)" (length acs))
+    (force-output)
     (categorize-by-equality acs #'abstract-type=/fast :transitive t)))
 
 (define-local-function %update-components* (p p-facts open)
@@ -111,6 +113,21 @@ added in the component"
                  (reduce #'union (mapcar #'parameters extenders)
                          :initial-value nil)))))))
 
+(defun bag-count-equal (list1 list2)
+  (let ((alist1 (%bag-count-1 list1))
+        (alist2 (%bag-count-1 list2)))
+    (and (iter (for (key . count) in alist1)
+               (for (key2 . count2) = (assoc key alist2))
+               (always (and count2 (= count count2))))
+         (iter (for (key . count) in alist2)
+               (for (key2 . count2) = (assoc key alist1))
+               (always (and count2 (= count count2)))))))
+
+(defun %bag-count-1 (list)
+  (let (plist)
+    (dolist (e list (plist-alist plist))
+      (incf (getf plist e 1)))))
+
 (defun abstract-type=/fast (ac1 ac2)
   "Returns true when the structure of ac1 is a subgraph of that of ac2.
 Follow the description in macroff-JAIR05.
@@ -121,15 +138,61 @@ Do not run the brute force search -- choose wisely."
        ((abstract-component (facts fs2) (components cs2))
         (and (= (length cs1) (length cs2))
              (= (length fs1) (length fs2))
-             (%choose-object nil nil nil nil fs1 fs2 cs1 cs2)))))))
+             (bag-count-equal (mapcar #'name fs1) (mapcar #'name fs2))
+             (bag-count-equal (mapcar (compose #'name #'type) cs1)
+                              (mapcar (compose #'name #'type) cs2))
+             (progn
+               (format t "~&Heavy Comparison... ~a facts, ~a objs"
+                       (length cs1) (length fs1))
+               (print (mapcar (compose #'name #'type) cs1))
+               (print (mapcar #'name fs1))
+               (print (mapcar (compose #'name #'type) cs2))
+               (print (mapcar #'name fs2))               
+               (force-output)
+               (reset-cache cs1 fs1 cs2 fs2)
+               (%choose-object nil nil nil nil fs1 fs2 cs1 cs2))))))))
+
+(defparameter *o-index-cache* (make-hash-table))
+(defparameter *f-index-cache* (make-hash-table))
+(defvar *of-table*)
+(defun reset/hash (os1 os2 hash)
+  (clrhash hash)
+  (iter (for o in (append os1 os2))
+        (for i from 0) (setf (gethash o hash) i)))
+(defun reset-cache (cs1 fs1 cs2 fs2)
+  (reset/hash cs1 cs2 *o-index-cache*)
+  (reset/hash fs1 fs2 *f-index-cache*)
+  (setf *of-table*
+        (make-array
+         (list (* 2 (length cs1)) (* 2 (length fs1)))
+         :element-type 'fixnum
+         :initial-element -1)))
+
+(defun cached-position-param (o f)
+  "same as (position o (parameters f)), but the result is cached
+and returns -2 instead of NIL when position failed to find o."
+  (let* ((oi (gethash o *o-index-cache*))
+         (fi (gethash f *f-index-cache*))
+         (cached (aref *of-table* oi fi)))
+    (case cached
+      ;; not computed.
+      (-1 (let ((res (position o (parameters f))))
+            (setf (aref *of-table* oi fi) (or res -2))))
+      (t cached))))
 
 (defun same-pos-if-appear (o1 o2 f1 f2)
-  (eq (position o1 (parameters f1))
-      (position o2 (parameters f2)))) 
+  (= (cached-position-param o1 f1)
+     (cached-position-param o2 f2)))
 
-;;;; imperative version
-;; (defun %choose (fs1 fs2 cs1 cs2)
-;;   )
+;; trivial version
+;; (defun same-pos-if-appear (o1 o2 f1 f2)
+;;   (eq (position o1 (parameters f1))
+;;       (position o2 (parameters f2))))
+
+;; (progn
+;;   (sb-profile:reset)
+;;   (sb-profile:unprofile)
+;;   (sb-profile:profile %choose-fact %choose-object same-pos-if-appear))
 
 ;;;; recursive version
 (defun %choose-object (os1 os2 checked1 checked2 unknown1 unknown2 cs1 cs2)
