@@ -142,13 +142,14 @@ Do not run the brute force search -- choose wisely."
              (bag-count-equal (mapcar (compose #'name #'type) cs1)
                               (mapcar (compose #'name #'type) cs2))
              (progn
-               (format t "~&Heavy Comparison... ~a facts, ~a objs"
-                       (length cs1) (length fs1))
-               (print (mapcar (compose #'name #'type) cs1))
-               (print (mapcar #'name fs1))
-               (print (mapcar (compose #'name #'type) cs2))
-               (print (mapcar #'name fs2))               
-               (force-output)
+               (when (< 3 (length cs1))
+                 (format t "~&Heavy Comparison... ~a facts, ~a objs"
+                         (length cs1) (length fs1))
+                 (print (mapcar (compose #'name #'type) cs1))
+                 (print (mapcar #'name fs1))
+                 (print (mapcar (compose #'name #'type) cs2))
+                 (print (mapcar #'name fs2))
+                 (force-output))
                (reset-cache cs1 fs1 cs2 fs2)
                (%choose-object nil nil nil nil fs1 fs2 cs1 cs2))))))))
 
