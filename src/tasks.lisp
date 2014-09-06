@@ -114,6 +114,7 @@
 
 (defun abstract-component-task<= (t1 t2)
   "Defines a relationship between the tasks.
+ Used for pre-categorization.
  t1 <= t2 when attributes, inits, goals of t1 are the subset of that of t2."
   (ematch t1
     ((abstract-component-task
@@ -132,7 +133,8 @@
              (facts-subsetp g1 g2 comp1 comp2 attr1 attr2)))))))
 
 (defun abstract-component-task= (ac-t1 ac-t2)
-  "Same abstract type and same set of attributes, as in KEPS."
+  "Same abstract type and same set of attributes, as in KEPS.
+Used for pre-categorization."
   (and (abstract-component-task<= ac-t1 ac-t2)
        (abstract-component-task<= ac-t2 ac-t1)))
 
