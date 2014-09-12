@@ -36,7 +36,8 @@
                  (:file :for-component-planner)
                  (:file :tasks)
                  (:file :extract-tasks)
-                 (:file :dereference))
+                 (:file :dereference)
+                 (:file :tim))
                 :serial t))
   :description ""
   :long-description

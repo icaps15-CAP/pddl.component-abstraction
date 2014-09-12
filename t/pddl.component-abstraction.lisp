@@ -38,7 +38,9 @@
           ("rover" "p03.pddl")
           ("rover" "p10.pddl")
           ("woodworking" "domain.pddl")
-          ("woodworking" "p01.pddl"))))
+          ("woodworking" "p01.pddl")
+          ("logistics" "domain.pddl")
+          ("logistics" "p01.pddl"))))
 
 (test :predicate-connects-components
   (let* ((*domain* rover)
@@ -179,4 +181,13 @@
          (abstract-components-with-seed
           ELEVATORS-SEQUENCEDSTRIPS-P40_60_1
           passenger-type)))))
+
+(test :type-predicate
+  (is (= 6 (length (type-predicates logistics))))
+  (is (= 17 (length (type-facts logistics-4-0))))
+
+  (print-pddl-object (add-types-to-domain logistics))
+  (print-pddl-object
+   (add-types-to-problem logistics-4-0 logistics)
+   *standard-output*))
 
