@@ -4,13 +4,19 @@
 ;; type inference module
 
 (defun type-facts (*problem*)
-  (remove-if-not (conjoin (lambda (p) (= 1 (length (parameters p))))
-                          (complement #'fluent-predicate-p))
+  (remove-if-not (lambda (p)
+                   (some (curry #'eqname p)
+                         (type-predicates (domain *problem*))))
                  (init *problem*)))
 
+(defun appear-in-actions (predicate)
+  (some (lambda (a)
+          (find predicate (positive-preconditions a) :test #'eqname))
+        (actions *domain*)))
 (defun type-predicates (*domain*)
   (remove-if-not (conjoin (lambda (p) (= 1 (length (parameters p))))
-                          (complement #'fluent-predicate-p))
+                          (complement #'fluent-predicate-p)
+                          #'appear-in-actions)
                  (predicates *domain*)))
 
 (defun typepred-parameter (pred)
@@ -82,14 +88,14 @@
                      ;; TODO may miss duplicated p?
                      (collecting
                       (shallow-copy p :type t1)))))
-        ;;(break+ types action p typed-ps)
         (collect
             (ematch typed-ps
+              ((list* _ _ _)
+               (format t "~&found an mix-in type, using only the first inheritance~%~a~%"
+                       typed-ps)
+               typed-ps)
               ((list x) x)
-              ((list) p)
-              ((list* x _ _)
-               (warn "found an mix-in type, using only the first inheritance")
-               x)))))
+              ((list) p)))))
 
 (defun add-types-to-action (types action)
   (ematch action
@@ -123,20 +129,32 @@
   (let ((new-domain (add-types-to-domain *domain*)))
     (ematch *problem*
       ((pddl-problem init objects)
-       (values
-        (shallow-copy
-         *problem*
-         :domain new-domain
-         :init (set-difference init
-                               (mapcar #'origin (types new-domain))
-                               :test #'eqname)
-         :objects (add-types-to-parameters
-                   (types new-domain)
-                   (pddl-action :parameters objects
-                                :precondition `(and ,@init))))
-        new-domain)))))
+       (let ((objects (add-types-to-parameters
+                       (types new-domain)
+                       (pddl-action :parameters objects
+                                    :precondition `(and ,@init)))))
+         (values
+          (shallow-copy
+           *problem*
+           :domain new-domain
+           :objects (mapcar (lambda-match
+                              ((list* x _ _) x)
+                              (x x)) objects)
+           :init (add-types-to-init-preserving-mixin
+                  init new-domain objects))
+          new-domain))))))
 
-
+(defun add-types-to-init-preserving-mixin (init new-domain objects)
+  (remove-if-not
+   (lambda (fact)
+     (if (some (curry #'eqname fact) (mapcar #'origin (types new-domain)))
+         (some (lambda (o)
+                 (and (eqname (type o) fact)
+                      (eqname o (typepred-parameter fact))))
+               (mappend (lambda-match
+                          ((list* _ rest) rest)) objects))
+         t))
+   init))
 
 
 ;; we also have to implement edelkamp-helmert 1999

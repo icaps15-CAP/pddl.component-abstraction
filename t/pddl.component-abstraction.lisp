@@ -18,6 +18,7 @@
 (def-suite :pddl.component-abstraction)
 (in-suite :pddl.component-abstraction)
 
+(cleanup-pddlfasl)
 (let ((*default-pathname-defaults*
        (asdf:system-relative-pathname
         :pddl.component-abstraction-test "t/")))
@@ -40,7 +41,9 @@
           ("woodworking" "domain.pddl")
           ("woodworking" "p01.pddl")
           ("logistics" "domain.pddl")
-          ("logistics" "p01.pddl"))))
+          ("logistics" "p01.pddl")
+          ("depot" "domain.pddl")
+          ("depot" "p01.pddl"))))
 
 (test :predicate-connects-components
   (let* ((*domain* rover)
@@ -194,21 +197,44 @@
   (is (= 17 (length (type-facts logistics-4-0))))
   ;;
   (is (= 30 (length (init logistics-4-0))))
+  (is (= 15 (length (objects logistics-4-0))))
   (multiple-value-bind
       (lp-typed log-typed) (add-types logistics-4-0)
     (is (= 6 (length (types log-typed))))
     (is (= 3 (length (predicates log-typed)))) 
-    (is (= 13 (length (init lp-typed))))
+    (is (= 15 (length (init lp-typed))))
     ;;
-    (is (= 15 (length (objects logistics-4-0))))
     (is (= 6 (typenum lp-typed log-typed :package)))
     (is (= 2 (typenum lp-typed log-typed :truck)))
+    ;; 2 of 4 are mixins with airport
     (is (= 2 (typenum lp-typed log-typed :location)))
     (is (= 1 (typenum lp-typed log-typed :airplane)))
     (is (= 2 (typenum lp-typed log-typed :airport)))
     (is (= 2 (typenum lp-typed log-typed :city)))
-    (print-pddl-object log-typed *standard-output*)
-    (terpri)
-    (print-pddl-object lp-typed *standard-output*)
+    ;; (print-pddl-object log-typed *standard-output*)
+    ;; (print-pddl-object lp-typed *standard-output*)
+    )
+
+  ;; types thats truely informative is only 5:
+  ;; truck, place, hoist, crate, surface
+  (is (= 15 (length (predicates depot))))
+  (is (= 5 (length (type-predicates depot))))
+  (is (= 15 (length (type-facts depotprob1818))))
+  ;;
+  (is (= 36 (length (init depotprob1818))))
+  (is (= 13 (length (objects depotprob1818))))
+  (multiple-value-bind
+      (dp-typed d-typed) (add-types depotprob1818)
+    (is (= 5 (length (types d-typed))))
+    (is (= (- 15 5) (length (predicates d-typed))))
+    (is (= (- 36 13) (length (init dp-typed))))
+    ;;
+    (is (= 2 (typenum dp-typed d-typed :truck)))
+    (is (= 3 (typenum dp-typed d-typed :place)))
+    (is (= 3 (typenum dp-typed d-typed :hoist)))
+    (is (= 0 (typenum dp-typed d-typed :crate))) ;; mixin with surface
+    (is (= 5 (typenum dp-typed d-typed :surface)))
+    ;; (print-pddl-object d-typed *standard-output*)
+    ;; (print-pddl-object dp-typed *standard-output*)
     ))
 
