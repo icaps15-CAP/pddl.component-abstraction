@@ -25,4 +25,5 @@
    :type-predicates
    :type-facts
    :add-types-to-domain
-   :add-types-to-problem))
+   :add-types-to-problem
+   :add-types))

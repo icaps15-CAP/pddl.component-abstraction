@@ -58,6 +58,12 @@
                 ))
         (finally (return types))))
 
+(defgeneric add-types (thing))
+(defmethod add-types ((o pddl-domain))
+  (add-types-to-domain o))
+(defmethod add-types ((o pddl-problem))
+  (add-types-to-problem o (domain o)))
+
 (defun add-types-to-parameters (types action)
   (iter (for p in (parameters action))
         (for typed-ps =
@@ -130,7 +136,7 @@
                                 :precondition `(and ,@init))))
         new-domain)))))
 
-                  
+
 
 
 ;; we also have to implement edelkamp-helmert 1999

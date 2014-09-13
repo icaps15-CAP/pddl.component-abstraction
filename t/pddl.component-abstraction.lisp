@@ -182,12 +182,33 @@
           ELEVATORS-SEQUENCEDSTRIPS-P40_60_1
           passenger-type)))))
 
+(defun typenum (prob dom typename)
+  (length (remove-if-not
+           (lambda (ot)
+             (pddl-supertype-p (query-type dom typename) ot))
+           (objects prob)
+           :key #'type)))
+
 (test :type-predicate
   (is (= 6 (length (type-predicates logistics))))
   (is (= 17 (length (type-facts logistics-4-0))))
-
-  (print-pddl-object (add-types-to-domain logistics))
-  (print-pddl-object
-   (add-types-to-problem logistics-4-0 logistics)
-   *standard-output*))
+  ;;
+  (is (= 30 (length (init logistics-4-0))))
+  (multiple-value-bind
+      (lp-typed log-typed) (add-types logistics-4-0)
+    (is (= 6 (length (types log-typed))))
+    (is (= 3 (length (predicates log-typed)))) 
+    (is (= 13 (length (init lp-typed))))
+    ;;
+    (is (= 15 (length (objects logistics-4-0))))
+    (is (= 6 (typenum lp-typed log-typed :package)))
+    (is (= 2 (typenum lp-typed log-typed :truck)))
+    (is (= 2 (typenum lp-typed log-typed :location)))
+    (is (= 1 (typenum lp-typed log-typed :airplane)))
+    (is (= 2 (typenum lp-typed log-typed :airport)))
+    (is (= 2 (typenum lp-typed log-typed :city)))
+    (print-pddl-object log-typed *standard-output*)
+    (terpri)
+    (print-pddl-object lp-typed *standard-output*)
+    ))
 
