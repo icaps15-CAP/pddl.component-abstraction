@@ -108,7 +108,8 @@
                                          (= (position pa comp1) (position pb comp2)))
                                         ((and (member pa attr1) (member pb attr2))
                                          (= (position pa attr1) (position pb attr2)))
-                                        (t t)))
+                                        ;; (t t)
+                                        (t (eqname pa pb))))
                                     (parameters a)
                                     (parameters b)))))))
 
