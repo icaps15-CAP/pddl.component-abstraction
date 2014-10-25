@@ -10,23 +10,28 @@
 (defun all-instantiated-predicates (*problem*)
   (let ((*domain* (domain *problem*)))
     (iter (for pred in (predicates *domain*))
-          (appending
-           (apply
-            #'map-product
-            (lambda (&rest args)
-              (pddl-predicate
-               :name (name pred)
-               :parameters
-               (mapcar (lambda (type)
-                         (pddl-variable :name (gensym (symbol-name (symbolicate '? (name type))))
-                                        :type type))
-                       args)))
-            (mapcar
-             (lambda (p)
-               (remove-if-not
-                (rcurry #'pddl-supertype-p (type p))
-                (all-instantiated-types *problem*)))
-             (parameters pred)))))))
+          (for parameters
+               = (mapcar
+                  (lambda (p)
+                    (remove-if-not
+                     (rcurry #'pddl-supertype-p (type p))
+                     (all-instantiated-types *problem*)))
+                  (parameters pred)))
+          (when parameters
+            ;; note: when parameters are nil,
+            ;; map-product throws an error 10/25
+            (appending
+             (apply
+              #'map-product
+              (lambda (&rest args)
+                (pddl-predicate
+                 :name (name pred)
+                 :parameters
+                 (mapcar (lambda (type)
+                           (pddl-variable :name (gensym (symbol-name (symbolicate '? (name type))))
+                                          :type type))
+                         args)))
+              parameters))))))
 
 (defun fluent-predicate-p (predicate)
   (let ((*domain* (domain predicate)))
