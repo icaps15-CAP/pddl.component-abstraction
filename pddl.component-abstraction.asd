@@ -17,8 +17,8 @@
   :author "Masataro Asai"
   :license ""
   :depends-on (:pddl
-               :eazylazy
-               :eazylazy.optima
+               ;; :eazylazy
+               ;; :eazylazy.optima
                :optima
                :bordeaux-threads
                :function-cache
@@ -31,8 +31,8 @@
                  (:file :static-predicates)
                  (:file :abstract-component)
                  (:file :cluster-objects)
-                 (:file :abstract-type)
-                 (:file :integrated)
+                 ;; (:file :abstract-type)
+                 ;; (:file :integrated)
                  (:file :for-component-planner)
                  (:file :tasks)
                  (:file :extract-tasks)
