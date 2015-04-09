@@ -34,6 +34,7 @@
                  ;; (:file :abstract-type)
                  ;; (:file :integrated)
                  (:file :for-component-planner)
+                 (:file :single-node)
                  (:file :tasks)
                  (:file :extract-tasks)
                  (:file :dereference)
