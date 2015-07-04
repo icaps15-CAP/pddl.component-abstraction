@@ -53,10 +53,4 @@
                                :fill-pointer t)))
           (setf (fill-pointer seq) (read-sequence seq stream))
           seq)))
-  :in-order-to ((test-op (load-op pddl.component-abstraction-test))))
-
-
-(defmethod asdf:perform ((op asdf:test-op)
-			 (system (eql (asdf:find-system :pddl.component-abstraction))))
-  (funcall (find-symbol "RUN!" (find-package :fiveam)) :pddl.component-abstraction)
-  t)
+  :in-order-to ((test-op (test-op pddl.component-abstraction-test))))
