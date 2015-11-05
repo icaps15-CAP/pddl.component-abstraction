@@ -26,4 +26,5 @@
    :type-facts
    :add-types-to-domain
    :add-types-to-problem
-   :add-types))
+   :add-types
+   :abstract-tasks-single-node))

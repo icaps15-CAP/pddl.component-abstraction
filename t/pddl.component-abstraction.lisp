@@ -114,45 +114,57 @@
     (is-true (predicates-connect-components
               (list rw0 rw1) ac))
 
-    (is-true (abstract-type= ac0 ac1))
     (is-true (abstract-type=/fast ac0 ac1))
-    (is-true (abstract-type<= ac0 ac1))
-    (is-true (abstract-type<= ac1 ac0))
-    (is-true (abstract-type<=> ac1 ac0))
-    (is-false (abstract-type< ac1 ac0))
-    (is-false (abstract-type< ac0 ac1))
 
-    ;; after the addition, ac0 > ac2
-    (is-false (abstract-type= ac0 ac2))
+    #+nil
+    (progn
+      (is-true (abstract-type= ac0 ac1))
+      (is-true (abstract-type<= ac0 ac1))
+      (is-true (abstract-type<= ac1 ac0))
+      (is-true (abstract-type<=> ac1 ac0))
+      (is-false (abstract-type< ac1 ac0))
+      (is-false (abstract-type< ac0 ac1)))
+
     (is-false (abstract-type=/fast ac0 ac2))
-    (is-true (abstract-type<= ac2 ac0))
-    (is-false (abstract-type<= ac0 ac2))
-    (is-true (abstract-type<=> ac2 ac0))
-    (is-false (abstract-type< ac0 ac2))
-    (is-true (abstract-type< ac2 ac0))
+    ;; after the addition, ac0 > ac2
+    #+nil
+    (progn
+      (is-false (abstract-type= ac0 ac2))
+      (is-true (abstract-type<= ac2 ac0))
+      (is-false (abstract-type<= ac0 ac2))
+      (is-true (abstract-type<=> ac2 ac0))
+      (is-false (abstract-type< ac0 ac2))
+      (is-true (abstract-type< ac2 ac0)))
 
-
-    (is-false (abstract-type= ac3 ac2))
+ 
     (is-false (abstract-type=/fast ac3 ac2))
-    (is-false (abstract-type<= ac3 ac2))
-    (is-false (abstract-type<= ac2 ac3))
-    (is-false (abstract-type<=> ac2 ac3))
-    (is-false (abstract-type< ac2 ac3))
-    (is-false (abstract-type< ac3 ac2))
-    ))
+    #+nil
+    (progn
+      (is-false (abstract-type= ac3 ac2))
+      (is-false (abstract-type<= ac3 ac2))
+      (is-false (abstract-type<= ac2 ac3))
+      (is-false (abstract-type<=> ac2 ac3))
+      (is-false (abstract-type< ac2 ac3))
+      (is-false (abstract-type< ac3 ac2)))))
 
 ;; integration tests
 (test :cluster-objects
   ;; preparation
-  (finishes
-    (cluster-objects (static-facts roverprob03)
-                     (static-predicates roverprob03)))
-  ;; main function
-  (finishes
-    (abstract-components roverprob03))
-  (finishes
-    (best-abstract-components roverprob03))
+  (let ((*problem* roverprob03)
+        (*domain* rover))
+    (finishes
+      (cluster-objects (static-facts roverprob03)
+                       (static-predicates roverprob03)))
+    ;; main function
 
+    #+nil
+    (finishes
+      (abstract-components roverprob03))
+    #+nil
+    (finishes
+      (best-abstract-components roverprob03)))
+
+  #+nil
   (finishes
     (abstract-components-with-seed
      wood-prob-opt-1
@@ -164,6 +176,7 @@
      cell-assembly-model2a-each-2
      (query-type cell-assembly-eachparts :base)))
 
+  #+nil
   (finishes
     (abstract-tasks roverprob03 :rover))
 
@@ -173,6 +186,7 @@
 
 
   ;; regression test : what if :passenger has no static edges??
+  #+nil
   (let ((passenger-type
          (query-type elevators-sequencedstrips :passenger)))
     (is (some
