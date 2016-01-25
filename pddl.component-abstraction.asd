@@ -17,9 +17,7 @@
   :author "Masataro Asai"
   :license ""
   :depends-on (:pddl
-               ;; :eazylazy
-               ;; :eazylazy.optima
-               :optima
+               :trivia
                :bordeaux-threads
                :function-cache
                :alexandria

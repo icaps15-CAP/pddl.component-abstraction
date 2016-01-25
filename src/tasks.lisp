@@ -70,7 +70,7 @@
 (defmethod print-object ((ac-task abstract-component-task) s)
   (print-unreadable-object (ac-task s)
     (match ac-task
-      ((abstract-component-task- (ac (and ac (abstract-component components)))
+      ((abstract-component-task (ac (and ac (abstract-component components)))
                                  multiary-init multiary-goal
                                  unary-init unary-goal)
        (let ((*print-escape* t))
