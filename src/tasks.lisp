@@ -1,6 +1,7 @@
 (in-package :pddl.component-abstraction)
 (cl-syntax:use-syntax :annot)
 
+(eval-when (:compile-toplevel :load-toplevel :execute)
 (defstruct (abstract-component-task (:predicate abstract-component-task-p))
   "A structure for abstract-task.
  slot ac is the core component.
@@ -55,7 +56,7 @@
   (remove-if
    #'unary-p
    (abstract-component-task-init ac)))
-
+)
 (defun visible-elements (components f)
   (match f
     ((pddl-function-state name parameters value)
