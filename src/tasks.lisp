@@ -7,28 +7,25 @@
  slot ac is the core component.
  slot init holds the relevant initial state, unrestored.
  slot goal holds the relevant goal."
-  (problem *problem*) init goal ac)
+  (%problem *problem*) %init %goal ac)
 
 (export '(ac
           abstract-component-task
           abstract-component-task-p
-          abstract-component-task-init
-          abstract-component-task-goal
           abstract-component-task-unary-init
           abstract-component-task-unary-goal
           abstract-component-task-multiary-init
           abstract-component-task-multiary-goal
           abstract-component-task-ac
-          abstract-component-task-problem
           make-abstract-component-task))
 
 (defmethod problem ((ac abstract-component-task))
-  @inline abstract-component-task-problem
-  (abstract-component-task-problem ac))
+  @inline abstract-component-task-%problem
+  (abstract-component-task-%problem ac))
 
 (defmethod domain((ac abstract-component-task))
-  @inline abstract-component-task-problem
-  (domain (abstract-component-task-problem ac)))
+  @inline abstract-component-task-%problem
+  (domain (abstract-component-task-%problem ac)))
 
 (defun unary-p (f)
   (match f
@@ -40,22 +37,29 @@
 (defun abstract-component-task-unary-goal (ac)
   (remove-if-not
    #'unary-p
-   (abstract-component-task-goal ac)))
+   (abstract-component-task-%goal ac)))
 
 (defun abstract-component-task-unary-init (ac)
   (remove-if-not
    #'unary-p
-   (abstract-component-task-init ac)))
+   (abstract-component-task-%init ac)))
 
 (defun abstract-component-task-multiary-goal (ac)
   (remove-if
    #'unary-p
-   (abstract-component-task-goal ac)))
+   (abstract-component-task-%goal ac)))
 
 (defun abstract-component-task-multiary-init (ac)
   (remove-if
    #'unary-p
-   (abstract-component-task-init ac)))
+   (abstract-component-task-%init ac)))
+
+(defmethod problem ((ac abstract-component-task))
+  (abstract-component-task-%problem ac))
+(defmethod init ((ac abstract-component-task))
+  (abstract-component-task-%init ac))
+(defmethod goal ((ac abstract-component-task))
+  (abstract-component-task-%goal ac))
 )
 (defun visible-elements (components f)
   (match f
@@ -93,10 +97,10 @@
 
 (defun task (ac *problem*)
   (make-abstract-component-task
-   :problem *problem*
+   :%problem *problem*
    :ac ac
-   :init (facts-concerning ac (set-difference (init *problem*) (static-facts *problem*)))
-   :goal (facts-concerning ac (positive-goals *problem*))))
+   :%init (facts-concerning ac (set-difference (init *problem*) (static-facts *problem*)))
+   :%goal (facts-concerning ac (positive-goals *problem*))))
 
 (defun facts-subsetp (fs1 fs2 comp1 comp2 attr1 attr2)
   (and (<= (length fs1) (length fs2))
